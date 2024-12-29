@@ -1,4 +1,4 @@
-.PHONY: go/build go/run go/audit go/benchmark go/coverage go/format go/lint go/test go/longtest go/tidy
+.PHONY: go/deps go/build go/run go/audit go/benchmark go/coverage go/format go/lint go/test go/longtest go/tidy
 
 gd: go/deps
 go/deps:
@@ -7,7 +7,7 @@ go/deps:
 	@go install golang.org/x/vuln/cmd/govulncheck@latest
 	@go install gotest.tools/gotestsum@latest
 	@go install mvdan.cc/gofumpt@latest
-	@go install goose github.com/pressly/goose/v3/cmd/goose@latest
+	@go install github.com/pressly/goose/v3/cmd/goose@latest
 
 gb: go/build
 go/build:
