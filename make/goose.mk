@@ -8,27 +8,28 @@ SEED_PATH ?= db/seed
 .PHONY: migration seed migrate/up migrate/down migrate/fresh migrate/fresh/seed
 
 m: migration
-migration: check/goose
+migration:
 	@goose -dir=${MIGRATIONS_PATH} create ${name} sql
 
 s: seed
-seed: check/goose
+seed:
 	@goose -dir=${SEED_PATH} create ${name} sql
 
 mu: migrate/up
-migrate/up: check/goose
+migrate/up:
 	@goose -dir=${MIGRATIONS_PATH} ${DB} ${DSN} up
 
 md: migrate/down
-migrate/down: check/goose
+migrate/down:
 	@goose -dir=${MIGRATIONS_PATH} ${DB} ${DSN} down
 
 mf: migrate/fresh
-migrate/fresh: check/goose
+migrate/fresh:
 	@goose -dir=${MIGRATIONS_PATH} ${DB} ${DSN} reset
 	@make migrate/up
 
 msf: migrate/fresh/seed
-migrate/fresh/seed: check/goose
+migrate/fresh/seed:
 	@make migrate/fresh
 	@goose -dir=${MIGRATIONS_PATH} -no-versioning ${DB} ${DSN} up
+
