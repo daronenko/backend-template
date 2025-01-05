@@ -1,6 +1,12 @@
 package constants
 
 const (
+	ConfigPath = "CONFIG_PATH"
+
+	Env  = "env"
+	Yaml = "yaml"
+	Json = "json"
+
 	GRPC     = "GRPC"
 	SIZE     = "SIZE"
 	URI      = "URI"
