@@ -22,7 +22,7 @@ type zapLogger struct {
 
 // NewZapLogger App Logger constructor
 func New(cfg *logger.Config) *zapLogger {
-	return &zapLogger{level: cfg.LogLevel, devMode: cfg.DevMode, encoding: cfg.Encoder}
+	return &zapLogger{level: cfg.Level, devMode: cfg.DevMode, encoding: cfg.Encoder}
 }
 
 // For mapping config logger to email_service logger levels
@@ -45,8 +45,8 @@ func (l *zapLogger) getLoggerLevel() zapcore.Level {
 	return level
 }
 
-// InitLogger Init logger
-func (l *zapLogger) InitLogger() {
+// Configure Init logger
+func (l *zapLogger) Configure() {
 	logLevel := l.getLoggerLevel()
 
 	logWriter := zapcore.AddSync(os.Stdout)
