@@ -53,3 +53,7 @@ gt: go/tidy
 go/tidy:
 	@go mod tidy -v
 
+gv: go/vendor
+go/vendor:
+	@go mod vendor
+
