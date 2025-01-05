@@ -1,0 +1,14 @@
+service:
+  name: backend-template
+  logger:
+    level: debug
+    devMode: false
+    encoder: console
+
+postgres:
+  host:
+  port:
+  user:
+  password:
+  database:
+  sslMode:
