@@ -15,7 +15,8 @@ go/build:
 
 gr: go/run
 go/run: bin/main
-	@bin/main
+	@export $(grep -v '^#' deploy/dev/.env | xargs)
+	@bin/main --config deploy/dev/config/config.yaml
 
 ga: go/audit
 go/audit:
