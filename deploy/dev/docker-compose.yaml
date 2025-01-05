@@ -1,9 +1,6 @@
-networks:
-  service-network:
-
 services:
   service:
-    image: daronenko/${SERVICE_NAME}:latest
+    image: ${SERVICE_NAME}:latest
     container_name: ${SERVICE_NAME}
     platform: linux/amd64
     env_file: .env
@@ -12,31 +9,28 @@ services:
       context: ../..
     ports:
       - ${SERVICE_PORT}:${SERVICE_PORT}
-    restart: on-failure
+    restart: on-failure:3
     volumes:
       - ./config/config.yaml:/etc/service/config.yaml
     depends_on:
       postgres:
         condition: service_healthy
     networks:
-      - service-network
+      - postgres
 
   postgres:
     container_name: ${SERVICE_NAME}-postgres
-    image: daronenko/${SERVICE_NAME}-postgres:latest
+    image: ${SERVICE_NAME}-postgres:latest
     build:
       dockerfile: postgres/Dockerfile
       context: .
     platform: linux/amd64
     env_file: .env
     environment:
-      - POSTGRES_DB=${POSTGRES_DATABASE}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
       - ${POSTGRES_PORT}:5432
-    restart: on-failure
+    restart: on-failure:3
     volumes:
       - ./postgres/.pgdata:/var/lib/postgresql/data
       - ./postgres/config/postgresql.conf:/etc/postgresql/postgresql.conf
@@ -46,10 +40,14 @@ services:
       test:
         [
           'CMD-SHELL',
-          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}'",
+          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
         ]
       interval: 2s
       timeout: 3s
       retries: 3
     networks:
-      - service-network
+      - postgres
+
+networks:
+    postgres:
+        driver: bridge
