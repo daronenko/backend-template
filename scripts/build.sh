@@ -3,7 +3,7 @@
 set -euo pipefail
 
 OUTPUT_DIR="bin"
-MAIN_PACKAGE="./cmd"
+MAIN_PACKAGE="./cmd/app"
 OUTPUT_FILE="${OUTPUT_DIR}/main"
 
 : "${VERSION:?VERSION is not set. Please export VERSION and try again.}"
