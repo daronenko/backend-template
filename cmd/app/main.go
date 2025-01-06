@@ -16,7 +16,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	logger, _ := zl.New(cfg.Service.Logger)
+	logger := zl.New(cfg.Service.Logger)
 	err = errors.New("example error")
 	logger.WarnErr("logging error", err)
 	logger.ErrorErr("logging error", err)
