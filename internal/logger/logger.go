@@ -1,52 +1,39 @@
 package logger
 
-import (
-	"time"
-)
-
 type Fields map[string]interface{}
 
 type Logger interface {
-	InitLogger()
-	Sync() error
+	WithName(name string)
+
+	Trace(args ...interface{})
+	Tracef(template string, args ...interface{})
+	Tracew(msg string, fields Fields)
+
 	Debug(args ...interface{})
 	Debugf(template string, args ...interface{})
 	Debugw(msg string, fields Fields)
+
 	Info(args ...interface{})
 	Infof(template string, args ...interface{})
 	Infow(msg string, fields Fields)
+
 	Warn(args ...interface{})
 	Warnf(template string, args ...interface{})
-	WarnMsg(msg string, err error)
+	Warnw(msg string, fields Fields)
+	WarnErr(msg string, err error)
+
 	Error(args ...interface{})
 	Errorf(template string, args ...interface{})
 	Errorw(msg string, fields Fields)
-	Err(msg string, err error)
-	DPanic(args ...interface{})
-	DPanicf(template string, args ...interface{})
+	ErrorErr(msg string, err error)
+
+	Panic(args ...interface{})
+	Panicf(template string, args ...interface{})
+	Panicw(msg string, fields Fields)
+	PanicErr(msg string, err error)
+
 	Fatal(args ...interface{})
 	Fatalf(template string, args ...interface{})
-	Printf(template string, args ...interface{})
-	WithName(name string)
-	HttpMiddlewareAccessLogger(
-		method string,
-		uri string,
-		status int,
-		size int64,
-		time time.Duration,
-	)
-	GrpcMiddlewareAccessLogger(
-		method string,
-		time time.Duration,
-		metaData map[string][]string,
-		err error,
-	)
-	GrpcClientInterceptorLogger(
-		method string,
-		req interface{},
-		reply interface{},
-		time time.Duration,
-		metaData map[string][]string,
-		err error,
-	)
+	Fatalw(msg string, fields Fields)
+	FatalErr(msg string, err error)
 }
