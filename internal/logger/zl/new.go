@@ -17,41 +17,46 @@ type zerologLogger struct {
 	logger zerolog.Logger
 }
 
-func New(cfg *logger.Config) (*zerologLogger, error) {
+func New(cfg *logger.Config) *zerologLogger {
+	zerolog.TimeFieldFormat = time.RFC3339Nano
+	zerolog.DurationFieldUnit = time.Nanosecond
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+
 	level, err := zerolog.ParseLevel(strings.ToLower(cfg.Level))
 	if err != nil {
 		level = zerolog.InfoLevel
 	}
 	zerolog.SetGlobalLevel(level)
-	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
-	output, err := configureOutput(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	zl := zerolog.New(output).
+	zl := zerolog.New(getWriter(cfg)).
 		Level(level).
 		With().
 		Timestamp().
+		Caller().
 		Logger()
 
-	return &zerologLogger{logger: zl}, nil
+	return &zerologLogger{zl}
 }
 
-func configureOutput(cfg *logger.Config) (io.Writer, error) {
+func getWriter(cfg *logger.Config) io.Writer {
+	var writer io.Writer
 	if cfg.DevMode {
-		return zerolog.ConsoleWriter{
-			Out:        os.Stdout,
-			TimeFormat: time.RFC3339,
-		}, nil
+		writer = os.Stdout
+	} else {
+		writer = zerolog.MultiLevelWriter(
+			&lumberjack.Logger{
+				Filename:   cfg.LogsPath,
+				MaxSize:    cfg.MaxSize,
+				MaxBackups: cfg.MaxBackups,
+				MaxAge:     cfg.MaxAge,
+				Compress:   cfg.Compress,
+			},
+			zerolog.ConsoleWriter{
+				Out:        os.Stdout,
+				TimeFormat: time.RFC3339Nano,
+			},
+		)
 	}
 
-	return &lumberjack.Logger{
-		Filename:   cfg.LogsPath,
-		MaxSize:    cfg.MaxSize,
-		MaxBackups: cfg.MaxBackups,
-		MaxAge:     cfg.MaxAge,
-		Compress:   cfg.Compress,
-	}, nil
+	return writer
 }
