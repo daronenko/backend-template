@@ -1,8 +1,14 @@
 service:
   name: backend-template
+
   logger:
     level: debug
     devMode: true
+    logsPath: /var/log/dump.log
+    maxSize: 10
+    maxBackups: 5
+    maxAge: 30
+    compress: true
 
 postgres:
   host:

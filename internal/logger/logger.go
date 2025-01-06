@@ -1,9 +1,12 @@
 package logger
 
+import "context"
+
 type Fields map[string]interface{}
 
 type Logger interface {
-	WithName(name string)
+	WithContext(ctx context.Context) Logger
+	WithFields(fields Fields) Logger
 
 	Trace(args ...interface{})
 	Tracef(template string, args ...interface{})

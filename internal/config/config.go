@@ -35,6 +35,8 @@ type PostgresConfig struct {
 }
 
 func New() (*Config, error) {
+	flag.Parse()
+
 	viper.SetConfigFile(configPath)
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, errors.Wrap(err, "viper.ReadInConfig")

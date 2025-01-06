@@ -1,13 +1,25 @@
 package zl
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/daronenko/backend-template/internal/logger"
+
+	"github.com/rs/zerolog"
 )
 
-func (l *zerologLogger) WithName(name string) {
-	l.logger = l.logger.With().Str("name", name).Logger()
+func (l *zerologLogger) WithContext(ctx context.Context) *zerologLogger {
+	fields := zerolog.Ctx(ctx)
+	return &zerologLogger{
+		logger: l.logger.With().Fields(fields).Logger(),
+	}
+}
+
+func (l *zerologLogger) WithFields(fields logger.Fields) *zerologLogger {
+	return &zerologLogger{
+		logger: l.logger.With().Fields(fields).Logger(),
+	}
 }
 
 func (l *zerologLogger) Trace(args ...interface{}) {
