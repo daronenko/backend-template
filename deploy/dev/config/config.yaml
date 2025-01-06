@@ -2,7 +2,7 @@ service:
   name: backend-template
   logger:
     level: debug
-    devMode: false
+    devMode: true
 
 postgres:
   host:

@@ -1,5 +1,8 @@
 FROM golang:1.22-alpine3.20
 
+ARG VERSION
+ARG REVISION
+
 WORKDIR /service
 
 COPY go.mod go.sum ./
@@ -13,6 +16,6 @@ ENV GO111MODULE=on
 
 ENV GOCACHE=/root/.cache/go-build
 RUN --mount=type=cache,target="/root/.cache/go-build" \
-   go build -mod=vendor -o bin/main cmd/app/main.go
+   sh scripts/build.sh
 
 ENTRYPOINT ["/service/bin/main", "--config", "/etc/service/config.yaml"]
