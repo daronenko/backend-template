@@ -12,6 +12,7 @@ services:
     restart: on-failure:3
     volumes:
       - ./config/config.yaml:/etc/service/config.yaml
+      - ./logs:/var/log
     depends_on:
       postgres:
         condition: service_healthy
@@ -19,8 +20,8 @@ services:
       - postgres
 
   postgres:
-    container_name: ${SERVICE_NAME}-postgres
     image: ${SERVICE_NAME}-postgres:latest
+    container_name: ${SERVICE_NAME}-postgres
     build:
       dockerfile: postgres/Dockerfile
       context: .

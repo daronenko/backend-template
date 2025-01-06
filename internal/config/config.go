@@ -9,9 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	configPath string
-)
+var configPath string
 
 func init() {
 	flag.StringVar(&configPath, "config", "", "path to service config file")

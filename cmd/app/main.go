@@ -3,14 +3,12 @@ package main
 import (
 	"flag"
 	"log"
+	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/daronenko/backend-template/internal/config"
-	"github.com/daronenko/backend-template/internal/logger/zap"
-)
-
-var (
-	Version  string
-	Revision string
+	"github.com/daronenko/backend-template/internal/logger/zl"
 )
 
 func main() {
@@ -21,7 +19,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	logger := zap.New(cfg.Service.Logger)
-	logger.Configure()
-	logger.Info(cfg.Postgres)
+	logger := zl.New(cfg.Service.Logger)
+	err = errors.New("example error")
+	logger.WarnErr("logging error", err)
+	logger.ErrorErr("logging error", err)
+	time.Sleep(180 * time.Second)
 }

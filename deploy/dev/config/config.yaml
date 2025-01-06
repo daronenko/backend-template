@@ -3,7 +3,6 @@ service:
   logger:
     level: debug
     devMode: false
-    encoder: console
 
 postgres:
   host:
