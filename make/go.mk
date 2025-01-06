@@ -1,9 +1,3 @@
-VERSION ?= 0.0.1
-export VERSION
-
-GIT_COMMIT := $(shell git rev-parse HEAD)
-export REVISION = $(GIT_COMMIT)
-
 .PHONY: go/deps go/build go/run go/clean go/audit go/benchmark go/coverage go/format go/lint go/test go/longtest go/tidy
 
 gd: go/deps
