@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/daronenko/backend-template/internal/logger"
+	"github.com/daronenko/backend-template/pkg/logger"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
