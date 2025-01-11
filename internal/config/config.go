@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"emperror.dev/errors"
-	"github.com/daronenko/backend-template/internal/logger"
+	"github.com/daronenko/backend-template/pkg/logger"
 	"github.com/spf13/viper"
 )
 
@@ -21,8 +21,9 @@ type Config struct {
 }
 
 type ServiceConfig struct {
-	Name   string         `mapstructure:"name"`
-	Logger *logger.Config `mapstructure:"logger"`
+	Name     string         `mapstructure:"name"`
+	AdminKey string         `mapstructure:"adminKey"`
+	Logger   *logger.Config `mapstructure:"logger"`
 }
 
 type PostgresConfig struct {

@@ -1,9 +1,11 @@
-FROM golang:1.22-alpine3.20
+FROM golang:1.23-alpine3.20
 
 ARG VERSION
 ARG REVISION
 
 WORKDIR /service
+
+RUN apk add --no-cache curl
 
 COPY go.mod go.sum ./
 RUN go mod download
