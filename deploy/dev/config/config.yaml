@@ -5,7 +5,7 @@ service:
 
   logger:
     level: debug
-    devMode: true
+    devMode: false
     logsPath: /var/log/dump.log
     maxSize: 10
     maxBackups: 5

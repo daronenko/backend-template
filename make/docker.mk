@@ -1,4 +1,4 @@
-.PHONY: docker/build docker/run docker/down docker/clean docker/logs docker/logs/live
+.PHONY: docker/build docker/build/hot docker/run docker/down docker/clean docker/logs docker/logs/live
 
 DOCKER_COMPOSE_PATH ?= deploy/dev/docker-compose.yaml
 DOCKER_COMPOSE 		?= docker compose -f ${DOCKER_COMPOSE_PATH}
@@ -19,10 +19,16 @@ dc: docker/clean
 docker/clean:
 	@${DOCKER_COMPOSE} down -v --rmi all
 
+c       ?=
+compose ?=
+
 dl: docker/logs
 docker/logs:
-	@${DOCKER_COMPOSE} logs
+	@${DOCKER_COMPOSE} logs ${compose} ${c}
+
+c       ?=
+compose ?=
 
 dll: docker/logs/live
 docker/logs/live:
-	@${DOCKER_COMPOSE} logs -f
+	@${DOCKER_COMPOSE} logs -f ${compose} ${c}

@@ -9,6 +9,6 @@ func RegisterIndex(app *fiber.App) {
 func Index(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"@link":   "https://github.com/daronenko/backend-template",
-		"message": "Welcome to Backend Template (v1)",
+		"message": "Welcome to Backend Template v1",
 	})
 }
