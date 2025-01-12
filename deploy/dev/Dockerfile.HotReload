@@ -4,6 +4,12 @@ WORKDIR /service
 
 RUN go install github.com/air-verse/air@latest
 
+ARG VERSION
+ENV VERSION=${VERSION}
+
+ARG REVISION
+ENV REVISION=${REVISION}
+
 COPY go.mod go.sum ./
 RUN go mod download
 

@@ -5,7 +5,11 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "tmp/main"
-  cmd = "go build -o ./tmp/main ./cmd/app/main.go"
+  cmd = """
+    go build \
+      --ldflags "-X github.com/daronenko/backend-template/internal/config.Version=${VERSION} -X github.com/daronenko/backend-template/internal/config.Revision=${REVISION}" \
+      -o ./tmp/main ./cmd/app/main.go
+  """
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "make", "scripts", "db", "deploy"]
   exclude_file = []

@@ -31,6 +31,9 @@ services:
     build:
       dockerfile: deploy/dev/Dockerfile.HotReload
       context: ../..
+      args:
+        VERSION: ${VERSION}
+        REVISION: ${REVISION}
     ports:
       - ${SERVICE_PORT}:${SERVICE_PORT}
     restart: on-failure:3
