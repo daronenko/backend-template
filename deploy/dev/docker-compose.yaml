@@ -1,26 +1,27 @@
 services:
-  # service:
-  #   image: ${SERVICE_NAME}:latest
-  #   container_name: ${SERVICE_NAME}
-  #   platform: linux/amd64
-  #   env_file: .env
-  #   build:
-  #     dockerfile: deploy/dev/Dockerfile
-  #     context: ../..
-  #     args:
-  #       VERSION: ${VERSION}
-  #       REVISION: ${REVISION}
-  #   ports:
-  #     - ${SERVICE_PORT}:${SERVICE_PORT}
-  #   restart: on-failure:3
-  #   volumes:
-  #     - ./config/config.yaml:/etc/service/config.yaml
-  #     - ./logs:/var/log
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   networks:
-  #     - postgres
+  service:
+    image: ${SERVICE_NAME}:latest
+    container_name: ${SERVICE_NAME}
+    platform: linux/amd64
+    env_file: .env
+    build:
+      dockerfile: deploy/dev/Dockerfile
+      context: ../..
+      args:
+        VERSION: ${VERSION}
+        REVISION: ${REVISION}
+    ports:
+      - ${SERVICE_PORT}:${SERVICE_PORT}
+    restart: on-failure:3
+    volumes:
+      - ./config/config.yaml:/etc/service/config.yaml
+      - ./logs:/var/log
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: ["default"]
+    networks:
+      - postgres
   
   hotreload:
     container_name: ${SERVICE_NAME}-hotreload
@@ -37,6 +38,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    profiles: ["hotreload"]
     networks:
       - postgres
 
