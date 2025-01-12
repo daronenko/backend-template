@@ -24,6 +24,7 @@ services:
       - postgres
   
   hotreload:
+    image: ${SERVICE_NAME}-hotreload:latest
     container_name: ${SERVICE_NAME}-hotreload
     platform: linux/amd64
     env_file: .env
