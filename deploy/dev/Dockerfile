@@ -1,23 +1,25 @@
-FROM golang:1.23-alpine3.20
+FROM golang:1.23-alpine3.20 AS builder
 
-ARG VERSION
-ARG REVISION
+ENV CGO_ENABLED=0 GOOS=linux GO111MODULE=on
 
 WORKDIR /service
 
-RUN apk add --no-cache curl
+ARG VERSION
+ARG REVISION
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
-ENV CGO_ENABLED=0
-ENV GOOS=linux 
-ENV GO111MODULE=on
-
 ENV GOCACHE=/root/.cache/go-build
 RUN --mount=type=cache,target="/root/.cache/go-build" \
-   sh scripts/build.sh
+    go build \
+    --ldflags "-X github.com/daronenko/backend-template/internal/config.Version=${VERSION} -X github.com/daronenko/backend-template/internal/config.Revision=${REVISION}" \
+    -v -o ./bin/main ./cmd/app/main.go
 
-ENTRYPOINT ["/service/bin/main", "--config", "/etc/service/config.yaml"]
+FROM scratch
+
+COPY --from=builder /service/bin/main /service
+
+ENTRYPOINT ["/service", "--config", "/etc/service/config.yaml"]
