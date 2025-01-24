@@ -1,0 +1,26 @@
+FROM golang:1.23-alpine3.20
+
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+ENV CGO_ENABLED=0 GOOS=linux GO111MODULE=on
+
+WORKDIR /service
+
+ARG VERSION
+ARG REVISION
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+ENV GOCACHE=/root/.cache/go-build
+RUN --mount=type=cache,target="/root/.cache/go-build" \
+    go build \
+    --gcflags="all=-N -l" \
+    --ldflags "-X github.com/daronenko/backend-template/internal/config.Version=${VERSION} -X github.com/daronenko/backend-template/internal/config.Revision=${REVISION}" \
+    -v -o ./bin/main ./cmd/app/main.go
+
+ENTRYPOINT ["/go/bin/dlv"]
+
+CMD ["--listen=:40000", "--headless=true", "--log=true", "--log-output=debugger,debuglineerr,gdbwire,lldbout,rpc", "--accept-multiclient", "--api-version=2", "exec", "/service/bin/main", "--", "--config=/etc/service/config.yaml"]

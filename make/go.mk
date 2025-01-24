@@ -8,6 +8,7 @@ go/deps:
 	@go install gotest.tools/gotestsum@latest
 	@go install mvdan.cc/gofumpt@latest
 	@go install github.com/pressly/goose/v3/cmd/goose@latest
+	@go install github.com/go-delve/delve/cmd/dlv@latest
 
 ga: go/audit
 go/audit:
@@ -47,3 +48,7 @@ go/tidy:
 gv: go/vendor
 go/vendor:
 	@go mod vendor
+
+gcd: go/connect/debugger
+go/connect/debugger:
+	@dlv connect localhost:40000 

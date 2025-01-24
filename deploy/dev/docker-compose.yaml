@@ -2,7 +2,6 @@ services:
   service:
     image: ${SERVICE_NAME}:latest
     container_name: ${SERVICE_NAME}
-    platform: linux/amd64
     env_file: .env
     build:
       dockerfile: deploy/dev/Dockerfile
@@ -26,7 +25,6 @@ services:
   hotreload:
     image: ${SERVICE_NAME}-hotreload:latest
     container_name: ${SERVICE_NAME}-hotreload
-    platform: linux/amd64
     env_file: .env
     build:
       dockerfile: deploy/dev/Dockerfile.HotReload
@@ -36,15 +34,41 @@ services:
         REVISION: ${REVISION}
     ports:
       - ${SERVICE_PORT}:${SERVICE_PORT}
+      - 40000:40000
     restart: on-failure:3
     volumes:
       - ../..:/service
+      - ./config/config.yaml:/etc/service/config.yaml
     depends_on:
       postgres:
         condition: service_healthy
     profiles: ["hotreload"]
     networks:
       - postgres
+  
+  debug:
+    image: ${SERVICE_NAME}-debug:latest
+    container_name: ${SERVICE_NAME}-debug
+    env_file: .env
+    build:
+      dockerfile: deploy/dev/Dockerfile.Debug
+      context: ../..
+      args:
+        VERSION: ${VERSION}
+        REVISION: ${REVISION}
+    ports:
+      - ${SERVICE_PORT}:${SERVICE_PORT}
+      - 40000:40000
+    restart: on-failure:3
+    volumes:
+      - ./config/config.yaml:/etc/service/config.yaml
+      - ./logs:/var/log
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - postgres
+    profiles: ["debug"]
 
   postgres:
     image: ${SERVICE_NAME}-postgres:latest
@@ -52,7 +76,6 @@ services:
     build:
       dockerfile: postgres/Dockerfile
       context: .
-    platform: linux/amd64
     env_file: .env
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
