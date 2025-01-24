@@ -18,8 +18,13 @@ RUN --mount=type=cache,target="/root/.cache/go-build" \
     --ldflags "-X github.com/daronenko/backend-template/internal/config.Version=${VERSION} -X github.com/daronenko/backend-template/internal/config.Revision=${REVISION}" \
     -v -o ./bin/main ./cmd/app/main.go
 
-FROM scratch
+FROM alpine:3.20
+
+RUN apk add --no-cache curl
 
 COPY --from=builder /service/bin/main /service
+
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 --start-interval=3s \
+  CMD curl --fail http://localhost:8080/api/_/health || exit 1
 
 ENTRYPOINT ["/service", "--config", "/etc/service/config.yaml"]

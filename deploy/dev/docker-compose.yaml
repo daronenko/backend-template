@@ -66,9 +66,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    profiles: ["debug"]
     networks:
       - postgres
-    profiles: ["debug"]
 
   postgres:
     image: ${SERVICE_NAME}-postgres:latest
