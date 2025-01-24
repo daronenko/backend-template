@@ -25,6 +25,5 @@ RUN --mount=type=cache,target="/root/.cache/go-build" \
     -v -o ./bin/main ./cmd/app/main.go
 
 COPY .air.toml ./
-# COPY deploy/dev/config/config.yaml /etc/service/config.yaml
 
 CMD ["air", "-c", ".air.toml"]
