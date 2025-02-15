@@ -11,6 +11,20 @@ service:
     maxBackups: 5
     maxAge: 30
     compress: true
+  
+  auth:
+    jwtSecret: secretkey
+
+    cookie:
+      name: jwt-token
+      maxAge: 86400
+      secure: false
+      httpOnly: true
+  
+    session:
+      name: session-id
+      prefix: api-session
+      expire: 3600
 
 postgres:
   host:
@@ -19,3 +33,13 @@ postgres:
   password:
   database:
   sslMode:
+  driver: pgx
+
+redis:
+  host:
+  port:
+  password:
+  database: 0
+  minIdleConns: 200
+  poolSize: 12000
+  poolTimeout: 240

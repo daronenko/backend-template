@@ -1,4 +1,4 @@
-package logger
+package config
 
 type Config struct {
 	Level      string `mapstructure:"level"`

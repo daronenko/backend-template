@@ -8,7 +8,7 @@ services:
       context: ../..
       args:
         VERSION: ${VERSION}
-        REVISION: ${REVISION}
+        GIT_REVISION: ${GIT_REVISION}
     ports:
       - ${SERVICE_PORT}:${SERVICE_PORT}
     restart: on-failure:3
@@ -18,9 +18,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     profiles: ["default"]
     networks:
       - postgres
+      - redis
   
   hotreload:
     image: ${SERVICE_NAME}-hotreload:latest
@@ -31,7 +34,7 @@ services:
       context: ../..
       args:
         VERSION: ${VERSION}
-        REVISION: ${REVISION}
+        GIT_REVISION: ${GIT_REVISION}
     ports:
       - ${SERVICE_PORT}:${SERVICE_PORT}
       - 40000:40000
@@ -42,9 +45,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     profiles: ["hotreload"]
     networks:
       - postgres
+      - redis
   
   debug:
     image: ${SERVICE_NAME}-debug:latest
@@ -55,7 +61,7 @@ services:
       context: ../..
       args:
         VERSION: ${VERSION}
-        REVISION: ${REVISION}
+        GIT_REVISION: ${GIT_REVISION}
     ports:
       - ${SERVICE_PORT}:${SERVICE_PORT}
       - 40000:40000
@@ -66,9 +72,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     profiles: ["debug"]
     networks:
       - postgres
+      - redis
 
   postgres:
     image: ${SERVICE_NAME}-postgres:latest
@@ -91,14 +100,35 @@ services:
       test:
         [
           'CMD-SHELL',
-          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
+          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}'",
         ]
       interval: 2s
       timeout: 3s
       retries: 3
     networks:
       - postgres
+  
+  redis:
+    image: redis:7.4-alpine
+    container_name: ${SERVICE_NAME}-redis
+    restart: on-failure:3
+    ports:
+      - 6379:6379
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
+    volumes: 
+      - ./redis/.rdata:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--raw", "incr", "ping" ]
+      interval: 3s
+      timeout: 3s
+      retries: 3
+    networks:
+      - redis
+      - postgres
 
 networks:
     postgres:
-        driver: bridge
+      driver: bridge
+    redis:
+      driver: bridge

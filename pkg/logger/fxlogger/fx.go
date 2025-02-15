@@ -18,7 +18,6 @@ func Fx() fxevent.Logger {
 	logger := fxLogger{
 		log.Logger.
 			With().
-			Str("evt.name", "fx.init").
 			Logger(),
 	}
 	return &fxevent.ConsoleLogger{

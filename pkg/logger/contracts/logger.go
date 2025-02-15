@@ -1,8 +1,6 @@
-package logger
+package contracts
 
 import "context"
-
-type Fields map[string]interface{}
 
 type Logger interface {
 	WithContext(ctx context.Context) Logger
