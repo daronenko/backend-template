@@ -1,0 +1,64 @@
+definitions:
+  models.User:
+    properties:
+      avatar:
+        maxLength: 512
+        type: string
+      created_at:
+        type: string
+      email:
+        maxLength: 60
+        type: string
+      id:
+        type: string
+      login_date:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      role:
+        maxLength: 10
+        type: string
+      updated_at:
+        type: string
+      username:
+        maxLength: 30
+        type: string
+    required:
+    - password
+    - username
+    type: object
+info:
+  contact: {}
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: login user, returns user and set session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: Login new user
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: register new user, returns user and token
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: Register new user
+      tags:
+      - Auth
+swagger: "2.0"
