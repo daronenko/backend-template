@@ -1,7 +1,7 @@
 services:
   service:
-    image: ${SERVICE_NAME}:latest
-    container_name: ${SERVICE_NAME}
+    image: ${APP_NAME}:latest
+    container_name: ${APP_NAME}
     env_file: .env
     build:
       dockerfile: deploy/dev/Dockerfile
@@ -10,10 +10,10 @@ services:
         VERSION: ${VERSION}
         GIT_REVISION: ${GIT_REVISION}
     ports:
-      - ${SERVICE_PORT}:${SERVICE_PORT}
+      - ${APP_PORT}:${APP_PORT}
     restart: on-failure:3
     volumes:
-      - ./config/config.yaml:/etc/service/config.yaml
+      - ./config/config.yaml:/etc/app/config.yaml
       - ./logs:/var/log
     depends_on:
       postgres:
@@ -26,8 +26,8 @@ services:
       - redis
   
   hotreload:
-    image: ${SERVICE_NAME}-hotreload:latest
-    container_name: ${SERVICE_NAME}-hotreload
+    image: ${APP_NAME}-hotreload:latest
+    container_name: ${APP_NAME}-hotreload
     env_file: .env
     build:
       dockerfile: deploy/dev/Dockerfile.HotReload
@@ -36,12 +36,12 @@ services:
         VERSION: ${VERSION}
         GIT_REVISION: ${GIT_REVISION}
     ports:
-      - ${SERVICE_PORT}:${SERVICE_PORT}
+      - ${APP_PORT}:${APP_PORT}
       - 40000:40000
     restart: on-failure:3
     volumes:
-      - ../..:/service
-      - ./config/config.yaml:/etc/service/config.yaml
+      - ../..:/app
+      - ./config/config.yaml:/etc/app/config.yaml
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,8 +53,8 @@ services:
       - redis
   
   debug:
-    image: ${SERVICE_NAME}-debug:latest
-    container_name: ${SERVICE_NAME}-debug
+    image: ${APP_NAME}-debug:latest
+    container_name: ${APP_NAME}-debug
     env_file: .env
     build:
       dockerfile: deploy/dev/Dockerfile.Debug
@@ -63,11 +63,11 @@ services:
         VERSION: ${VERSION}
         GIT_REVISION: ${GIT_REVISION}
     ports:
-      - ${SERVICE_PORT}:${SERVICE_PORT}
+      - ${APP_PORT}:${APP_PORT}
       - 40000:40000
     restart: on-failure:3
     volumes:
-      - ./config/config.yaml:/etc/service/config.yaml
+      - ./config/config.yaml:/etc/app/config.yaml
       - ./logs:/var/log
     depends_on:
       postgres:
@@ -80,8 +80,8 @@ services:
       - redis
 
   postgres:
-    image: ${SERVICE_NAME}-postgres:latest
-    container_name: ${SERVICE_NAME}-postgres
+    image: ${APP_NAME}-postgres:latest
+    container_name: ${APP_NAME}-postgres
     build:
       dockerfile: postgres/Dockerfile
       context: .
@@ -110,7 +110,7 @@ services:
   
   redis:
     image: redis:7.4-alpine
-    container_name: ${SERVICE_NAME}-redis
+    container_name: ${APP_NAME}-redis
     restart: on-failure:3
     ports:
       - 6379:6379

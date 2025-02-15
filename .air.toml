@@ -7,7 +7,7 @@ tmp_dir = "tmp"
   bin = "tmp/main"
   cmd = """
     go build \
-      --ldflags "-X github.com/daronenko/backend-template/internal/config.Version=${VERSION} -X github.com/daronenko/backend-template/internal/config.Revision=${REVISION}" \
+      --ldflags "-X github.com/daronenko/backend-template/internal/bininfo.Version=${VERSION} -X github.com/daronenko/backend-template/internal/bininfo.GitRevision=${GIT_REVISION}" \
       -o ./tmp/main ./cmd/app/main.go
   """
   delay = 1000
@@ -16,7 +16,7 @@ tmp_dir = "tmp"
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
   follow_symlink = false
-  full_bin = "tmp/main --config /etc/service/config.yaml"
+  full_bin = "tmp/main --config /etc/app/config.yaml"
   include_dir = []
   include_ext = ["go", "tpl", "tmpl", "html"]
   kill_delay = "0s"
