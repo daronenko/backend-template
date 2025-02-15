@@ -1,54 +1,52 @@
-.PHONY: go/deps go/build go/run go/clean go/audit go/benchmark go/coverage go/format go/lint go/test go/longtest go/tidy
+.PHONY: install audit benchmark coverage format lint test longtest vendor debug
 
-gd: go/deps
-go/deps:
-	@go install honnef.co/go/tools/cmd/staticcheck@latest
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	@go install golang.org/x/vuln/cmd/govulncheck@latest
-	@go install gotest.tools/gotestsum@latest
+gi: install
+install:
 	@go install mvdan.cc/gofumpt@latest
-	@go install github.com/pressly/goose/v3/cmd/goose@latest
+	@go install gotest.tools/gotestsum@latest
+	@go install github.com/swaggo/swag/cmd/swag@latest
 	@go install github.com/go-delve/delve/cmd/dlv@latest
+	@go install golang.org/x/vuln/cmd/govulncheck@latest
+	@go install honnef.co/go/tools/cmd/staticcheck@latest
+	@go install github.com/pressly/goose/v3/cmd/goose@latest
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
-ga: go/audit
-go/audit:
+ga: audit
+audit:
 	@go mod verify
 	@go vet ./...
 	@govulncheck ./...
 
-gbm: go/benchmark
-go/benchmark:
+gb: benchmark
+benchmark:
 	@go test ./... -benchmem -bench=. -run=^Benchmark_$
 
-gc: go/coverage
-go/coverage:
+gc: coverage
+coverage:
 	@gotestsum -f testname -- ./... -race -count=1 -coverprofile=/tmp/coverage.out -covermode=atomic
 	@go tool cover -html=/tmp/coverage.out
 
-gf: go/format
-go/format:
+gf: format
+format:
 	@go run mvdan.cc/gofumpt@latest -w -l .
 
-gl: go/lint
-go/lint:
+gl: lint
+lint:
 	@golangci-lint run ./...
 
-gt: go/test
-go/test:
+gt: test
+test:
 	@gotestsum -f testname -- ./... -race -count=1 -shuffle=on
 
-glt: go/longtest
-go/longtest:
+gl: longtest
+longtest:
 	@gotestsum -f testname -- ./... -race -count=15 -shuffle=on
 
-gt: go/tidy
-go/tidy:
+gv: vendor
+vendor:
 	@go mod tidy -v
-
-gv: go/vendor
-go/vendor:
 	@go mod vendor
 
-gcd: go/connect/debugger
-go/connect/debugger:
+gd: debug
+debug:
 	@dlv connect localhost:40000 

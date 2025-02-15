@@ -1,10 +1,9 @@
 include deploy/dev/.env
 
-export VERSION := 0.0.1
-
-GIT_COMMIT := $(shell git rev-parse HEAD)
-export REVISION := $(GIT_COMMIT)
+export VERSION := v0.0.1
+export GIT_REVISION := ${shell git rev-parse HEAD}
 
 include make/go.mk
-include make/goose.mk
 include make/docker.mk
+include make/swagger.mk
+include make/migration.mk

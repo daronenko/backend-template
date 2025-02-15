@@ -1,52 +1,52 @@
-.PHONY: docker/build docker/run docker/run/force docker/start docker/stop docker/down docker/clean docker/logs docker/logs/live docker/ps docker/ps/all docker/exec
+.PHONY: build run run/force enable disable shutdown clean logs logs/live ps ps/all shell
 
 DOCKER_COMPOSE_PATH ?= deploy/dev/docker-compose.yaml
 DOCKER_COMPOSE 		?= docker compose -f ${DOCKER_COMPOSE_PATH} --profile ${PROFILE}
 
-db: docker/build
-docker/build:
+db: build
+build:
 	@VERSION=${VERSION} REVISION=${REVISION} ${DOCKER_COMPOSE} build
 
-dr: docker/run
-docker/run:
+dr: run
+run:
 	@${DOCKER_COMPOSE} up -d
 
-drf: docker/run/force
-docker/run/force:
+drf: run/force
+run/force:
 	@${DOCKER_COMPOSE} up -d --force-recreate
 
-dst: docker/start
-docker/start:
+de: enable
+enable:
 	@${DOCKER_COMPOSE} start ${c} ${compose}
 
-dsp: docker/stop
-docker/stop:
+dd: disable
+disable:
 	@${DOCKER_COMPOSE} stop ${c} ${compose}
 
-dd: docker/down
-docker/down:
+ds: shutdown
+shutdown:
 	@${DOCKER_COMPOSE} down
 
-dc: docker/clean
-docker/clean:
+dc: clean
+clean:
 	@${DOCKER_COMPOSE} down -v --rmi all
 
-dl: docker/logs
-docker/logs:
+dl: logs
+logs:
 	@${DOCKER_COMPOSE} logs ${c} ${compose}
 
-dll: docker/logs/live
-docker/logs/live:
+dll: logs/live
+logs/live:
 	@${DOCKER_COMPOSE} logs -f ${c} ${compose}
 
-dp: docker/ps
-docker/ps:
+dp: ps
+ps:
 	@${DOCKER_COMPOSE} ps
 
-dpa: docker/ps/all
-docker/ps/all:
+dpa: ps/all
+ps/all:
 	@${DOCKER_COMPOSE} ps -a
 
-de: docker/exec
-docker/exec:
-	@${DOCKER_COMPOSE} exec -it ${c} ${compose} sh -c '(bash || ash || sh)'
+dsh: shell
+shell:
+	@${DOCKER_COMPOSE} exec -it ${c} ${compose} sh -c '(bash || sh)'
