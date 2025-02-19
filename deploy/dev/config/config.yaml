@@ -15,16 +15,20 @@ service:
   auth:
     jwtSecret: secretkey
 
-    cookie:
-      name: jwt-token
-      maxAge: 86400
-      secure: false
-      httpOnly: true
+    user:
+      cache:
+        prefix: api-auth
+        expire: 3600
   
     session:
-      name: session-id
-      prefix: api-session
-      expire: 3600
+      cache:
+        prefix: api-session
+        expire: 3600
+
+      cookie:
+        name: session-id
+        secure: false
+        httpOnly: true
 
 postgres:
   host:

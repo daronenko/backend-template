@@ -5,7 +5,8 @@ import (
 	"net"
 
 	"github.com/daronenko/backend-template/internal/app"
-	"github.com/daronenko/backend-template/internal/config"
+	"github.com/daronenko/backend-template/internal/app/config"
+	"github.com/daronenko/backend-template/internal/app/ctx"
 	"github.com/daronenko/backend-template/internal/server/httpserver"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,7 +15,7 @@ import (
 )
 
 func main() {
-	app.New(fx.Invoke(run)).Run()
+	app.New(ctx.Declare(ctx.EnvServer), fx.Invoke(run)).Run()
 }
 
 func run(serviceApp *fiber.App, devOpsApp httpserver.DevOpsApp, cfg *config.Config, lc fx.Lifecycle) {

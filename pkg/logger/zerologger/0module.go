@@ -2,7 +2,8 @@ package zerologger
 
 import (
 	. "github.com/daronenko/backend-template/pkg/logger/config"
-	. "github.com/daronenko/backend-template/pkg/logger/contracts"
+	// . "github.com/daronenko/backend-template/pkg/logger/contracts"
+	. "github.com/daronenko/backend-template/pkg/logger"
 	"go.uber.org/fx"
 )
 

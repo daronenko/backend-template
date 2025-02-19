@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	. "github.com/daronenko/backend-template/pkg/logger/contracts"
+	. "github.com/daronenko/backend-template/pkg/logger"
 
 	"github.com/rs/zerolog"
 )

@@ -4,7 +4,7 @@ import (
 	"crypto/subtle"
 	"strings"
 
-	"github.com/daronenko/backend-template/internal/config"
+	"github.com/daronenko/backend-template/internal/app/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )

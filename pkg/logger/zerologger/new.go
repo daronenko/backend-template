@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
+	. "github.com/daronenko/backend-template/pkg/logger"
 	. "github.com/daronenko/backend-template/pkg/logger/config"
-	. "github.com/daronenko/backend-template/pkg/logger/contracts"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"

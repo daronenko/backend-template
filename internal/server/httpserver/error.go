@@ -3,12 +3,12 @@ package httpserver
 import (
 	"io/fs"
 
-	"github.com/daronenko/backend-template/internal/pgerr"
+	"github.com/daronenko/backend-template/internal/pkg/errs"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )
 
-func HandleCustomError(ctx *fiber.Ctx, e *pgerr.PenguinError) error {
+func HandleCustomError(ctx *fiber.Ctx, e *errs.Error) error {
 	// Provide error code if pgerr.PenguinError type
 	body := fiber.Map{
 		"code":    e.ErrorCode,
@@ -37,15 +37,15 @@ func ErrorHandler(ctx *fiber.Ctx, err error) error {
 				Msg("recovered from panic")
 
 			ctx.Status(500).JSON(fiber.Map{
-				"code":    pgerr.CodeInternalError,
-				"message": pgerr.ErrInternalErrorImmutable.Message,
+				"code":    errs.CodeInternalError,
+				"message": errs.ErrInternalErrorImmutable.Message,
 			})
 		}
 	}()
 
 	// Return default error handler
 	// Default 500 statuscode
-	re := pgerr.ErrInternalErrorImmutable
+	re := errs.ErrInternalErrorImmutable
 
 	if e, ok := err.(*fiber.Error); ok {
 		// Use default error handler if not a custom error
@@ -54,10 +54,10 @@ func ErrorHandler(ctx *fiber.Ctx, err error) error {
 
 	if _, ok := err.(*fs.PathError); ok {
 		// File not found
-		return HandleCustomError(ctx, pgerr.ErrInvalidReq)
+		return HandleCustomError(ctx, errs.ErrInvalidReq)
 	}
 
-	if e, ok := err.(*pgerr.PenguinError); ok {
+	if e, ok := err.(*errs.Error); ok {
 		// Use custom error handler if it's a custom error
 		return HandleCustomError(ctx, e)
 	}

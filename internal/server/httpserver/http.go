@@ -6,8 +6,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/daronenko/backend-template/internal/config"
-	"github.com/daronenko/backend-template/internal/pgerr"
+	"github.com/daronenko/backend-template/internal/app/config"
+	"github.com/daronenko/backend-template/internal/bininfo"
+	"github.com/daronenko/backend-template/internal/pkg/errs"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
@@ -29,7 +30,7 @@ func New(cfg *config.Config) (*fiber.App, DevOpsApp) {
 func CreateServiceApp(cfg *config.Config) *fiber.App {
 	app := fiber.New(fiber.Config{
 		AppName:               "Backend Template v1",
-		ServerHeader:          fmt.Sprintf("Template/%s", config.Version),
+		ServerHeader:          fmt.Sprintf("Template/%s", bininfo.Version),
 		DisableStartupMessage: true,
 		// NOTICE: This will also affect WebSocket. Be aware if this fiber instance service is re-used
 		//         for long connection services.
@@ -65,7 +66,7 @@ func CreateServiceApp(cfg *config.Config) *fiber.App {
 	app.Use(func(c *fiber.Ctx) error {
 		// Use custom error handler to return customized error responses
 		err := c.Next()
-		if e, ok := err.(*pgerr.PenguinError); ok {
+		if e, ok := err.(*errs.Error); ok {
 			return HandleCustomError(c, e)
 		}
 		return err
@@ -87,7 +88,7 @@ func CreateServiceApp(cfg *config.Config) *fiber.App {
 func CreateDevOpsApp(cfg *config.Config) *fiber.App {
 	app := fiber.New(fiber.Config{
 		AppName:               "Backend Template v1 (DevOps)",
-		ServerHeader:          fmt.Sprintf("TemplateDevOps/%s", config.Version),
+		ServerHeader:          fmt.Sprintf("TemplateDevOps/%s", bininfo.Version),
 		DisableStartupMessage: false,
 		// allow possibility for graceful shutdown, otherwise app#Shutdown() will block forever
 		IdleTimeout:             time.Second * 60,
