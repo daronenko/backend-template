@@ -48,4 +48,11 @@ const (
 		ORDER BY username
 		OFFSET $2 LIMIT $3
 	`
+
+	getUsers = `
+		SELECT id, username, email, role, avatar, created_at, updated_at, login_date
+		FROM "user"
+		ORDER BY COALESCE(NULLIF($1, ''), username)
+		OFFSET $2 LIMIT $3
+	`
 )

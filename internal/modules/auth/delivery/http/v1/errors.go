@@ -14,8 +14,9 @@ const (
 )
 
 var (
-	ErrUserExists   = errs.New(fiber.StatusBadRequest, CodeUserExists, "user with that name or email already exists")
-	ErrUserNotFound = errs.New(fiber.StatusNotFound, CodeUserNotFound, "user with that username and email does not exist")
+	ErrUserExists           = errs.New(fiber.StatusBadRequest, CodeUserExists, "user with that name or email already exists")
+	ErrUserNotFound         = errs.New(fiber.StatusNotFound, CodeUserNotFound, "user with that username and email does not exist")
+	ErrMissingUsernameQuery = errs.New(fiber.StatusBadRequest, errs.CodeInvalidRequest, "username query param is required")
 )
 
 func MapUsecaseError(err error) *errs.Error {

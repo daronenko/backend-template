@@ -5,10 +5,11 @@ import (
 )
 
 const (
-	CodeNotFound       = "NOT_FOUND"
-	CodeInvalidRequest = "INVALID_REQUEST"
-	CodeInternalError  = "INTERNAL_ERROR"
-	CodeUnauthorized   = "UNAUTHORIZED"
+	CodeNotFound               = "NOT_FOUND"
+	CodeInvalidRequest         = "INVALID_REQUEST"
+	CodeInternalError          = "INTERNAL_ERROR"
+	CodeUnauthorized           = "UNAUTHORIZED"
+	CodePaginationQueryMissing = "PAGINATION_QUERY_MISSING"
 )
 
 var (
@@ -17,4 +18,5 @@ var (
 	ErrInternalError          = New(fiber.StatusInternalServerError, CodeInternalError, "internal server error occurred")
 	ErrInternalErrorImmutable = NewImmutable(fiber.StatusInternalServerError, CodeInternalError, "internal server error occurred")
 	ErrUnauthorized           = New(fiber.StatusUnauthorized, CodeUnauthorized, "unauthorized")
+	ErrPaginationQueryMissing = New(fiber.StatusBadRequest, CodePaginationQueryMissing, "pagination queries ('page', 'size' and 'orderBy') are missing")
 )

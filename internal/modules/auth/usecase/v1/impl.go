@@ -135,3 +135,13 @@ func (u *User) GetByID(ctx context.Context, userID uuid.UUID) (*models.User, err
 	user.SanitizePassword()
 	return user, nil
 }
+
+// Find users by username
+func (u *User) FindByUsername(ctx context.Context, name string, query *utils.PaginationQuery) (*models.UsersList, error) {
+	return u.repo.FindByName(ctx, name, query)
+}
+
+// Get users with pagination
+func (u *User) GetUsers(ctx context.Context, pq *utils.PaginationQuery) (*models.UsersList, error) {
+	return u.repo.GetUsers(ctx, pq)
+}

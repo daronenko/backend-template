@@ -1,4 +1,4 @@
-package httpErrors_
+package httpErrors
 
 import (
 	"context"

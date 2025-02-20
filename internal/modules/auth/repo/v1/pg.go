@@ -191,7 +191,7 @@ func (r *User) GetUsers(ctx context.Context, pq *utils.PaginationQuery) (*models
 	if err := r.db.SelectContext(
 		ctx,
 		&users,
-		getTotalUsersQuery,
+		getUsers,
 		pq.GetOrderBy(),
 		pq.GetOffset(),
 		pq.GetLimit(),
