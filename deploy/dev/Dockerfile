@@ -15,7 +15,7 @@ COPY . .
 ENV GOCACHE=/root/.cache/go-build
 RUN --mount=type=cache,target="/root/.cache/go-build" \
     go build \
-    --ldflags "-X github.com/daronenko/backend-template/internal/bininfo.Version=${VERSION} -X github.com/daronenko/backend-template/internal/bininfo.GitRevision=${GIT_REVISION}" \
+    --ldflags "-X github.com/daronenko/backend-template/internal/pkg/bininfo.Version=${VERSION} -X github.com/daronenko/backend-template/internal/pkg/bininfo.GitRevision=${GIT_REVISION}" \
     -v -o ./bin/main ./cmd/app/main.go
 
 FROM alpine:3.20

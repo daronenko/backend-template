@@ -9,6 +9,7 @@ import (
 	"github.com/daronenko/backend-template/internal/app/config"
 	"github.com/daronenko/backend-template/internal/pkg/bininfo"
 	"github.com/daronenko/backend-template/internal/pkg/errs"
+	"github.com/daronenko/backend-template/pkg/middleware"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
@@ -59,9 +60,9 @@ func CreateServiceApp(cfg *config.Config) *fiber.App {
 	}))
 	// requestid is used by report service to identify requests and generate taskId there afterwards
 	// the logger middleware now injects RequestID into the context
-	// middlewares.Logger(app)
+	middleware.Logger(app)
 	// then we need an extra middleware to extract it and repopulate it into ctx.Locals
-	// app.Use(middlewares.RequestID())
+	app.Use(middleware.RequestID())
 
 	app.Use(func(c *fiber.Ctx) error {
 		// Use custom error handler to return customized error responses

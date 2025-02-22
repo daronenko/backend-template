@@ -7,7 +7,7 @@ tmp_dir = "tmp"
   bin = "tmp/main"
   cmd = """
     go build \
-      --ldflags "-X github.com/daronenko/backend-template/internal/bininfo.Version=${VERSION} -X github.com/daronenko/backend-template/internal/bininfo.GitRevision=${GIT_REVISION}" \
+      --ldflags "-X github.com/daronenko/backend-template/internal/pkg/bininfo.Version=${VERSION} -X github.com/daronenko/backend-template/internal/pkg/bininfo.GitRevision=${GIT_REVISION}" \
       -o ./tmp/main ./cmd/app/main.go
   """
   delay = 1000
