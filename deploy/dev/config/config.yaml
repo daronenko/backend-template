@@ -4,12 +4,13 @@ service:
   adminKey:
 
   logger:
-    level: debug
-    devMode: false
-    logsPath: /var/log/dump.log
-    maxSize: 10
+    traceLevel: false
+    stdoutOnly: true
+    path: deploy/dev/logs/
+    filename: dump.log
+    maxSize: 100
+    maxAge: 90
     maxBackups: 5
-    maxAge: 30
     compress: true
   
   auth:

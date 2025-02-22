@@ -3,25 +3,25 @@ package repo
 import (
 	"context"
 
-	"github.com/daronenko/backend-template/internal/models"
-	"github.com/daronenko/backend-template/pkg/utils"
+	"github.com/daronenko/backend-template/internal/model/v1"
+	"github.com/daronenko/backend-template/internal/util"
 	"github.com/google/uuid"
 )
 
 type Repo interface {
-	Create(ctx context.Context, user *models.User) (*models.User, error)
-	Update(ctx context.Context, user *models.User) (*models.User, error)
+	Create(ctx context.Context, user *model.User) (*model.User, error)
+	Update(ctx context.Context, user *model.User) (*model.User, error)
 	Delete(ctx context.Context, userID uuid.UUID) error
 
-	GetByID(ctx context.Context, userID uuid.UUID) (*models.User, error)
-	GetByEmail(ctx context.Context, user *models.User) (*models.User, error)
+	GetByID(ctx context.Context, userID uuid.UUID) (*model.User, error)
+	GetByEmail(ctx context.Context, user *model.User) (*model.User, error)
 
-	FindByName(ctx context.Context, name string, query *utils.PaginationQuery) (*models.UsersList, error)
-	GetUsers(ctx context.Context, pq *utils.PaginationQuery) (*models.UsersList, error)
+	FindByName(ctx context.Context, name string, query *util.PaginationQuery) (*model.UsersList, error)
+	GetUsers(ctx context.Context, pq *util.PaginationQuery) (*model.UsersList, error)
 }
 
 type Cache interface {
-	Set(ctx context.Context, user *models.User) error
-	GetByID(ctx context.Context, userID uuid.UUID) (*models.User, error)
+	Set(ctx context.Context, user *model.User) error
+	GetByID(ctx context.Context, userID uuid.UUID) (*model.User, error)
 	Delete(ctx context.Context, userID uuid.UUID) error
 }

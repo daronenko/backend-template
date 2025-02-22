@@ -8,25 +8,23 @@ import (
 
 	"emperror.dev/errors"
 	"github.com/daronenko/backend-template/internal/app/config"
-	"github.com/daronenko/backend-template/internal/models"
-	"github.com/daronenko/backend-template/pkg/logger"
+	"github.com/daronenko/backend-template/internal/model/v1"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
 // Repo for user sessions
 type Session struct {
-	redis  *redis.Client
-	logger logger.Logger
-	conf   *config.Config
+	redis *redis.Client
+	conf  *config.Config
 }
 
-func NewSession(redis *redis.Client, logger logger.Logger, conf *config.Config) Repo {
-	return &Session{redis, logger, conf}
+func NewSession(redis *redis.Client, conf *config.Config) Repo {
+	return &Session{redis, conf}
 }
 
 // Create new user session
-func (r *Session) Create(ctx context.Context, session *models.Session) (string, error) {
+func (r *Session) Create(ctx context.Context, session *model.Session) (string, error) {
 	session.ID = uuid.New()
 
 	sessionBytes, err := json.Marshal(&session)
@@ -42,13 +40,13 @@ func (r *Session) Create(ctx context.Context, session *models.Session) (string, 
 }
 
 // Get user session by id
-func (r *Session) GetByID(ctx context.Context, sessionID uuid.UUID) (*models.Session, error) {
+func (r *Session) GetByID(ctx context.Context, sessionID uuid.UUID) (*model.Session, error) {
 	sessionStr, err := r.redis.Get(ctx, r.cacheKey(sessionID)).Result()
 	if err != nil {
 		return nil, errors.Wrap(err, "repo.Session.GetByID.redis.Get")
 	}
 
-	session := &models.Session{}
+	session := &model.Session{}
 	if err = json.Unmarshal([]byte(sessionStr), session); err != nil {
 		return nil, errors.Wrap(err, "repo.Session.GetByID.json.Unmarshal")
 	}

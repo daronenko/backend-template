@@ -1,9 +1,8 @@
-package utils
+package util
 
 import (
 	"context"
 	"encoding/json"
-	"mime/multipart"
 	"net/http"
 	"time"
 
@@ -11,9 +10,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/daronenko/backend-template/internal/app/config"
-	"github.com/daronenko/backend-template/internal/models"
-	"github.com/daronenko/backend-template/pkg/httpErrors"
-	"github.com/daronenko/backend-template/pkg/logger"
 	"github.com/daronenko/backend-template/pkg/sanitize"
 	"github.com/go-playground/validator/v10"
 )
@@ -87,13 +83,13 @@ func DeleteSessionCookie(c *fiber.Ctx, sessionName string) {
 type UserCtxKey struct{}
 
 // Get user from context
-func GetUserFromCtx(ctx context.Context) (*models.User, error) {
-	user, ok := ctx.Value(UserCtxKey{}).(*models.User)
-	if !ok {
-		return nil, httpErrors.Unauthorized
-	}
-	return user, nil
-}
+// func GetUserFromCtx(ctx context.Context) (*model.User, error) {
+// 	user, ok := ctx.Value(UserCtxKey{}).(*model.User)
+// 	if !ok {
+// 		return nil, httpErrors.Unauthorized
+// 	}
+// 	return user, nil
+// }
 
 // Get user IP address
 func GetIPAddress(c *fiber.Ctx) string {
@@ -101,28 +97,28 @@ func GetIPAddress(c *fiber.Ctx) string {
 }
 
 // Error response with logging error for Fiber context
-func ErrResponseWithLog(c *fiber.Ctx, log logger.Logger, err error) error {
-	errRespStatus, errResp := httpErrors.ErrorResponse(err)
+// func ErrResponseWithLog(c *fiber.Ctx, log logger.Logger, err error) error {
+// 	errRespStatus, errResp := httpErrors.ErrorResponse(err)
 
-	log.Errorf(
-		"ErrResponseWithLog, RequestID: %s, IPAddress: %s, Error: %v",
-		GetRequestID(c),
-		GetIPAddress(c),
-		err,
-	)
+// 	log.Errorf(
+// 		"ErrResponseWithLog, RequestID: %s, IPAddress: %s, Error: %v",
+// 		GetRequestID(c),
+// 		GetIPAddress(c),
+// 		err,
+// 	)
 
-	return c.Status(errRespStatus).JSON(errResp)
-}
+// 	return c.Status(errRespStatus).JSON(errResp)
+// }
 
 // Log response error for Fiber context
-func LogResponseError(c *fiber.Ctx, log logger.Logger, err error) {
-	log.Errorf(
-		"ErrResponseWithLog, RequestID: %s, IPAddress: %s, Error: %s",
-		GetRequestID(c),
-		GetIPAddress(c),
-		err,
-	)
-}
+// func LogResponseError(c *fiber.Ctx, log logger.Logger, err error) {
+// 	log.Errorf(
+// 		"ErrResponseWithLog, RequestID: %s, IPAddress: %s, Error: %s",
+// 		GetRequestID(c),
+// 		GetIPAddress(c),
+// 		err,
+// 	)
+// }
 
 // Read request body and validate
 func ReadRequest(c *fiber.Ctx, request interface{}) error {
@@ -133,19 +129,19 @@ func ReadRequest(c *fiber.Ctx, request interface{}) error {
 }
 
 // Read an image from the request
-func ReadImage(c *fiber.Ctx, field string) (*multipart.FileHeader, error) {
-	image, err := c.FormFile(field)
-	if err != nil {
-		return nil, errors.WithMessage(err, "c.FormFile")
-	}
+// func ReadImage(c *fiber.Ctx, field string) (*multipart.FileHeader, error) {
+// 	image, err := c.FormFile(field)
+// 	if err != nil {
+// 		return nil, errors.WithMessage(err, "c.FormFile")
+// 	}
 
-	// Check content type of image
-	if err = CheckImageContentType(image); err != nil {
-		return nil, err
-	}
+// 	// Check content type of image
+// 	if err = CheckImageContentType(image); err != nil {
+// 		return nil, err
+// 	}
 
-	return image, nil
-}
+// 	return image, nil
+// }
 
 // Read, sanitize, and validate request body
 func SanitizeRequest(c *fiber.Ctx, request interface{}) error {

@@ -1,4 +1,4 @@
-package utils
+package util
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/daronenko/backend-template/internal/app/config"
-	"github.com/daronenko/backend-template/internal/models"
+	"github.com/daronenko/backend-template/internal/model/v1"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -20,7 +20,7 @@ type Claims struct {
 }
 
 // Generate new JWT Token
-func GenerateJWTToken(user *models.User, config *config.Config) (string, error) {
+func GenerateJWTToken(user *model.User, config *config.Config) (string, error) {
 	// Register the JWT claims, which includes the username and expiry time
 	claims := &Claims{
 		Email: user.Email,
@@ -57,7 +57,6 @@ func ExtractJWTFromRequest(r *http.Request) (map[string]interface{}, error) {
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (jwtKey interface{}, err error) {
 		return jwtKey, err
 	})
-
 	if err != nil {
 		if errors.Is(err, jwt.ErrSignatureInvalid) {
 			return nil, errors.New("invalid token signature")

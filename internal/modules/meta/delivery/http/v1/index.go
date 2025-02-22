@@ -3,7 +3,7 @@ package httpdelivery
 import (
 	"fmt"
 
-	"github.com/daronenko/backend-template/internal/bininfo"
+	"github.com/daronenko/backend-template/internal/pkg/bininfo"
 	"github.com/gofiber/fiber/v2"
 )
 

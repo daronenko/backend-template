@@ -12,24 +12,24 @@ import (
 	"github.com/daronenko/backend-template/internal/modules/meta"
 	"github.com/daronenko/backend-template/internal/modules/session"
 	"github.com/daronenko/backend-template/internal/server"
-	"github.com/daronenko/backend-template/pkg/logger/fxlogger"
-	"github.com/daronenko/backend-template/pkg/logger/zerologger"
+	"github.com/daronenko/backend-template/pkg/logger"
 
 	"go.uber.org/fx"
 )
 
 func Options(ctx ctx.Ctx, additionalOpts ...fx.Option) []fx.Option {
-	cfg, err := config.New(ctx)
+	conf, err := config.New(ctx)
 	if err != nil {
 		log.Printf("error: failed to parse config: %v\n", err)
 		os.Exit(1)
 	}
 
-	baseOpts := []fx.Option{
-		fx.Supply(cfg),
+	logger.Configure(&conf.Service.Logger)
 
-		fx.WithLogger(fxlogger.Fx),
-		zerologger.Module(&cfg.Service.Logger),
+	baseOpts := []fx.Option{
+		fx.Supply(conf),
+
+		fx.WithLogger(logger.Fx),
 
 		infra.Module(),
 		server.Module(),

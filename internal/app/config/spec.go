@@ -1,8 +1,6 @@
 package config
 
-import (
-	logger "github.com/daronenko/backend-template/pkg/logger/config"
-)
+import "github.com/daronenko/backend-template/pkg/logger"
 
 type ServiceSpec struct {
 	Name     string        `mapstructure:"name"`

@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/daronenko/backend-template/internal/models"
+	"github.com/daronenko/backend-template/internal/model/v1"
 	"github.com/daronenko/backend-template/internal/modules/session/repo/v1"
 	"github.com/google/uuid"
 )
@@ -18,12 +18,12 @@ func NewSession(sessionRepo repo.Repo) Usecase {
 }
 
 // Create new user session
-func (s *Session) Create(ctx context.Context, session *models.Session) (string, error) {
+func (s *Session) Create(ctx context.Context, session *model.Session) (string, error) {
 	return s.repo.Create(ctx, session)
 }
 
 // Get user session by session id
-func (s *Session) GetByID(ctx context.Context, sessionID uuid.UUID) (*models.Session, error) {
+func (s *Session) GetByID(ctx context.Context, sessionID uuid.UUID) (*model.Session, error) {
 	return s.repo.GetByID(ctx, sessionID)
 }
 

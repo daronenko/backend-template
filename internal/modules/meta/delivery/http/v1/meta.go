@@ -3,9 +3,9 @@ package httpdelivery
 import (
 	"time"
 
-	"github.com/daronenko/backend-template/internal/bininfo"
-	"github.com/daronenko/backend-template/internal/constant"
 	"github.com/daronenko/backend-template/internal/modules/meta/usecase/v1"
+	"github.com/daronenko/backend-template/internal/pkg/bininfo"
+	"github.com/daronenko/backend-template/internal/pkg/constant"
 	"github.com/daronenko/backend-template/internal/server/svr"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cache"

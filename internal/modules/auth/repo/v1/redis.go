@@ -8,25 +8,23 @@ import (
 
 	"emperror.dev/errors"
 	"github.com/daronenko/backend-template/internal/app/config"
-	"github.com/daronenko/backend-template/internal/models"
-	"github.com/daronenko/backend-template/pkg/logger"
+	"github.com/daronenko/backend-template/internal/model/v1"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
 // Cache for users
 type UserCache struct {
-	redis  *redis.Client
-	logger logger.Logger
-	conf   *config.Config
+	redis *redis.Client
+	conf  *config.Config
 }
 
-func NewUserCache(redis *redis.Client, logger logger.Logger, conf *config.Config) Cache {
-	return &UserCache{redis, logger, conf}
+func NewUserCache(redis *redis.Client, conf *config.Config) Cache {
+	return &UserCache{redis, conf}
 }
 
 // Cache user
-func (r *UserCache) Set(ctx context.Context, user *models.User) error {
+func (r *UserCache) Set(ctx context.Context, user *model.User) error {
 	userBytes, err := json.Marshal(user)
 	if err != nil {
 		return errors.Wrap(err, "repo.UserCache.Set.json.Marshal")
@@ -40,13 +38,13 @@ func (r *UserCache) Set(ctx context.Context, user *models.User) error {
 }
 
 // Get user by id from cache
-func (r *UserCache) GetByID(ctx context.Context, userID uuid.UUID) (*models.User, error) {
+func (r *UserCache) GetByID(ctx context.Context, userID uuid.UUID) (*model.User, error) {
 	userStr, err := r.redis.Get(ctx, r.cacheKey(userID)).Result()
 	if err != nil {
 		return nil, errors.Wrap(err, "repo.UserCache.GetByID.redis.Get")
 	}
 
-	user := &models.User{}
+	user := &model.User{}
 	if err = json.Unmarshal([]byte(userStr), user); err != nil {
 		return nil, errors.Wrap(err, "repo.UserCache.GetByID.json.Unmarshal")
 	}

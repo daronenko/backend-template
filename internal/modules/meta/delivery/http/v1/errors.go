@@ -9,6 +9,4 @@ const (
 	CodeServiceUnhealthy = "SERVICE_UNHEALTHY"
 )
 
-var (
-	ErrServiceUnhealthy = errs.New(fiber.StatusInternalServerError, CodeServiceUnhealthy, "service is unhealthy")
-)
+var ErrServiceUnhealthy = errs.New(fiber.StatusInternalServerError, CodeServiceUnhealthy, "service is unhealthy")

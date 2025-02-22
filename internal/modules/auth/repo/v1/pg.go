@@ -4,10 +4,9 @@ import (
 	"context"
 
 	"emperror.dev/errors"
-	"github.com/daronenko/backend-template/internal/models"
-	"github.com/daronenko/backend-template/internal/pkg/pgerrs"
-	"github.com/daronenko/backend-template/pkg/logger"
-	"github.com/daronenko/backend-template/pkg/utils"
+	"github.com/daronenko/backend-template/internal/model/v1"
+	"github.com/daronenko/backend-template/internal/util"
+	"github.com/daronenko/backend-template/pkg/pgerrs"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jmoiron/sqlx"
@@ -15,17 +14,16 @@ import (
 
 // Repo for users
 type User struct {
-	db     *sqlx.DB
-	logger logger.Logger
+	db *sqlx.DB
 }
 
-func NewUser(db *sqlx.DB, logger logger.Logger) Repo {
-	return &User{db, logger}
+func NewUser(db *sqlx.DB) Repo {
+	return &User{db}
 }
 
 // Create new user
-func (r *User) Create(ctx context.Context, user *models.User) (*models.User, error) {
-	createdUser := &models.User{}
+func (r *User) Create(ctx context.Context, user *model.User) (*model.User, error) {
+	createdUser := &model.User{}
 
 	err := r.db.QueryRowxContext(ctx, createUserQuery,
 		user.Username,
@@ -34,7 +32,6 @@ func (r *User) Create(ctx context.Context, user *models.User) (*models.User, err
 		user.Role,
 		user.Avatar,
 	).StructScan(createdUser)
-
 	if err != nil {
 		if pgerrs.Is(err, pgerrs.UniqueViolation) {
 			return nil, ErrUserExists
@@ -46,8 +43,8 @@ func (r *User) Create(ctx context.Context, user *models.User) (*models.User, err
 }
 
 // Update existing user
-func (r *User) Update(ctx context.Context, user *models.User) (*models.User, error) {
-	updatedUser := &models.User{}
+func (r *User) Update(ctx context.Context, user *model.User) (*model.User, error) {
+	updatedUser := &model.User{}
 
 	err := r.db.QueryRowxContext(ctx, updateUserQuery,
 		user.Username,
@@ -56,7 +53,6 @@ func (r *User) Update(ctx context.Context, user *models.User) (*models.User, err
 		user.Avatar,
 		user.ID,
 	).StructScan(updatedUser)
-
 	if err != nil {
 		switch {
 		case errors.Is(err, pgx.ErrNoRows):
@@ -91,11 +87,10 @@ func (u *User) Delete(ctx context.Context, userID uuid.UUID) error {
 }
 
 // Get user by id
-func (r *User) GetByID(ctx context.Context, userID uuid.UUID) (*models.User, error) {
-	foundUser := &models.User{}
+func (r *User) GetByID(ctx context.Context, userID uuid.UUID) (*model.User, error) {
+	foundUser := &model.User{}
 
 	err := r.db.GetContext(ctx, foundUser, getUserQuery, userID)
-
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrUserNotFound
@@ -107,11 +102,10 @@ func (r *User) GetByID(ctx context.Context, userID uuid.UUID) (*models.User, err
 }
 
 // Get user by email
-func (u *User) GetByEmail(ctx context.Context, user *models.User) (*models.User, error) {
-	foundUser := &models.User{}
+func (u *User) GetByEmail(ctx context.Context, user *model.User) (*model.User, error) {
+	foundUser := &model.User{}
 
 	err := u.db.GetContext(ctx, foundUser, getUserByEmailQuery, user.Email)
-
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrUserNotFound
@@ -123,20 +117,20 @@ func (u *User) GetByEmail(ctx context.Context, user *models.User) (*models.User,
 }
 
 // Find users by name with pagination
-func (r *User) FindByName(ctx context.Context, name string, query *utils.PaginationQuery) (*models.UsersList, error) {
+func (r *User) FindByName(ctx context.Context, name string, query *util.PaginationQuery) (*model.UsersList, error) {
 	var totalUsers int
 	if err := r.db.GetContext(ctx, &totalUsers, getTotalUsersQuery, name); err != nil {
 		return nil, errors.Wrap(err, "repo.User.FindByName.GetContext")
 	}
 
 	if totalUsers == 0 {
-		return &models.UsersList{
+		return &model.UsersList{
 			TotalCount: totalUsers,
-			TotalPages: utils.GetTotalPages(totalUsers, query.GetSize()),
+			TotalPages: util.GetTotalPages(totalUsers, query.GetSize()),
 			Page:       query.GetPage(),
 			Size:       query.GetSize(),
-			HasMore:    utils.GetHasMore(query.GetPage(), totalUsers, query.GetSize()),
-			Users:      make([]*models.User, 0),
+			HasMore:    util.GetHasMore(query.GetPage(), totalUsers, query.GetSize()),
+			Users:      make([]*model.User, 0),
 		}, nil
 	}
 
@@ -146,9 +140,9 @@ func (r *User) FindByName(ctx context.Context, name string, query *utils.Paginat
 	}
 	defer rows.Close()
 
-	var users = make([]*models.User, 0, query.GetSize())
+	users := make([]*model.User, 0, query.GetSize())
 	for rows.Next() {
-		var user models.User
+		var user model.User
 		if err = rows.StructScan(&user); err != nil {
 			return nil, errors.Wrap(err, "repo.User.FindByName.StructScan")
 		}
@@ -159,35 +153,35 @@ func (r *User) FindByName(ctx context.Context, name string, query *utils.Paginat
 		return nil, errors.Wrap(err, "repo.User.FindByName.rows.Err")
 	}
 
-	return &models.UsersList{
+	return &model.UsersList{
 		TotalCount: totalUsers,
-		TotalPages: utils.GetTotalPages(totalUsers, query.GetSize()),
+		TotalPages: util.GetTotalPages(totalUsers, query.GetSize()),
 		Page:       query.GetPage(),
 		Size:       query.GetSize(),
-		HasMore:    utils.GetHasMore(query.GetPage(), totalUsers, query.GetSize()),
+		HasMore:    util.GetHasMore(query.GetPage(), totalUsers, query.GetSize()),
 		Users:      users,
 	}, nil
 }
 
 // Get users with pagination
-func (r *User) GetUsers(ctx context.Context, pq *utils.PaginationQuery) (*models.UsersList, error) {
+func (r *User) GetUsers(ctx context.Context, pq *util.PaginationQuery) (*model.UsersList, error) {
 	var totalUsers int
 	if err := r.db.GetContext(ctx, &totalUsers, getTotalUsersQuery); err != nil {
 		return nil, errors.Wrap(err, "repo.User.GetUsers.GetContext.totalCount")
 	}
 
 	if totalUsers == 0 {
-		return &models.UsersList{
+		return &model.UsersList{
 			TotalCount: totalUsers,
-			TotalPages: utils.GetTotalPages(totalUsers, pq.GetSize()),
+			TotalPages: util.GetTotalPages(totalUsers, pq.GetSize()),
 			Page:       pq.GetPage(),
 			Size:       pq.GetSize(),
-			HasMore:    utils.GetHasMore(pq.GetPage(), totalUsers, pq.GetSize()),
-			Users:      make([]*models.User, 0),
+			HasMore:    util.GetHasMore(pq.GetPage(), totalUsers, pq.GetSize()),
+			Users:      make([]*model.User, 0),
 		}, nil
 	}
 
-	var users = make([]*models.User, 0, pq.GetSize())
+	users := make([]*model.User, 0, pq.GetSize())
 	if err := r.db.SelectContext(
 		ctx,
 		&users,
@@ -199,12 +193,12 @@ func (r *User) GetUsers(ctx context.Context, pq *utils.PaginationQuery) (*models
 		return nil, errors.Wrap(err, "repo.User.GetUsers.SelectContext")
 	}
 
-	return &models.UsersList{
+	return &model.UsersList{
 		TotalCount: totalUsers,
-		TotalPages: utils.GetTotalPages(totalUsers, pq.GetSize()),
+		TotalPages: util.GetTotalPages(totalUsers, pq.GetSize()),
 		Page:       pq.GetPage(),
 		Size:       pq.GetSize(),
-		HasMore:    utils.GetHasMore(pq.GetPage(), totalUsers, pq.GetSize()),
+		HasMore:    util.GetHasMore(pq.GetPage(), totalUsers, pq.GetSize()),
 		Users:      users,
 	}, nil
 }

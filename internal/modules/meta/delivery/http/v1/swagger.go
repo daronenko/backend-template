@@ -2,7 +2,7 @@ package httpdelivery
 
 import (
 	"github.com/daronenko/backend-template/docs"
-	"github.com/daronenko/backend-template/internal/bininfo"
+	"github.com/daronenko/backend-template/internal/pkg/bininfo"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 )

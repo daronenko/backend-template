@@ -1,4 +1,4 @@
-package fxlogger
+package logger
 
 import (
 	"io"
@@ -9,15 +9,16 @@ import (
 )
 
 type fxLogger struct {
-	logger zerolog.Logger
+	l zerolog.Logger
 }
 
 var _ io.Writer = (*fxLogger)(nil)
 
 func Fx() fxevent.Logger {
 	logger := fxLogger{
-		log.Logger.
+		l: log.Logger.
 			With().
+			Str("evt.name", "fx.init").
 			Logger(),
 	}
 	return &fxevent.ConsoleLogger{
@@ -32,6 +33,6 @@ func (l fxLogger) Write(p []byte) (n int, err error) {
 		// Trim CR added by stdlog.
 		p = p[0 : n-1]
 	}
-	l.logger.Info().CallerSkipFrame(0).Msg(string(p))
+	l.l.Info().CallerSkipFrame(0).Msg(string(p))
 	return
 }

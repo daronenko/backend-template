@@ -4,13 +4,12 @@ import (
 	"fmt"
 
 	"github.com/daronenko/backend-template/internal/app/config"
-	"github.com/daronenko/backend-template/internal/models"
+	"github.com/daronenko/backend-template/internal/model/v1"
 	user "github.com/daronenko/backend-template/internal/modules/auth/usecase/v1"
 	session "github.com/daronenko/backend-template/internal/modules/session/usecase/v1"
 	"github.com/daronenko/backend-template/internal/pkg/errs"
 	"github.com/daronenko/backend-template/internal/server/svr"
-	"github.com/daronenko/backend-template/pkg/logger"
-	"github.com/daronenko/backend-template/pkg/utils"
+	"github.com/daronenko/backend-template/internal/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"go.uber.org/fx"
@@ -24,8 +23,7 @@ const (
 type Auth struct {
 	fx.In
 
-	Conf   *config.Config
-	Logger logger.Logger
+	Conf *config.Config
 
 	UserUsecase    user.Usecase
 	SessionUsecase session.Usecase
@@ -50,32 +48,29 @@ func RegisterAuth(v1 *svr.V1, d Auth) {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Success 201 {object} models.User
+// @Success 201 {object} model.User
 // @Router /api/v1/auth/register [post]
 func (d *Auth) Register(c *fiber.Ctx) error {
-	ctx := utils.GetRequestCtx(c)
+	ctx := c.UserContext()
 
-	user := &models.User{}
-	if err := utils.ReadRequest(c, user); err != nil {
-		utils.LogResponseError(c, d.Logger, err)
+	user := &model.User{}
+	if err := util.ReadRequest(c, user); err != nil {
 		return errs.ErrInvalidReq
 	}
 
 	createdUser, err := d.UserUsecase.Register(ctx, user)
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return MapUsecaseError(err)
 	}
 
-	sess, err := d.SessionUsecase.Create(ctx, &models.Session{
+	sess, err := d.SessionUsecase.Create(ctx, &model.Session{
 		UserID: createdUser.User.ID,
 	})
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return MapUsecaseError(err)
 	}
 
-	c.Cookie(utils.CreateSessionCookie(d.Conf, sess))
+	c.Cookie(util.CreateSessionCookie(d.Conf, sess))
 
 	return c.Status(fiber.StatusCreated).JSON(createdUser)
 }
@@ -86,7 +81,7 @@ func (d *Auth) Register(c *fiber.Ctx) error {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.User
+// @Success 200 {object} model.User
 // @Router /api/v1/auth/login [post]
 func (d *Auth) Login(c *fiber.Ctx) error {
 	type Login struct {
@@ -94,32 +89,29 @@ func (d *Auth) Login(c *fiber.Ctx) error {
 		Password string `json:"password,omitempty" db:"password" validate:"required,gte=6"`
 	}
 
-	ctx := utils.GetRequestCtx(c)
+	ctx := c.UserContext()
 
 	login := &Login{}
-	if err := utils.ReadRequest(c, login); err != nil {
-		utils.LogResponseError(c, d.Logger, err)
+	if err := util.ReadRequest(c, login); err != nil {
 		return errs.ErrInvalidReq
 	}
 
-	userWithToken, err := d.UserUsecase.Login(ctx, &models.User{
+	userWithToken, err := d.UserUsecase.Login(ctx, &model.User{
 		Email:    login.Email,
 		Password: login.Password,
 	})
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return MapUsecaseError(err)
 	}
 
-	sess, err := d.SessionUsecase.Create(ctx, &models.Session{
+	sess, err := d.SessionUsecase.Create(ctx, &model.Session{
 		UserID: userWithToken.User.ID,
 	})
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return MapUsecaseError(err)
 	}
 
-	c.Cookie(utils.CreateSessionCookie(d.Conf, sess))
+	c.Cookie(util.CreateSessionCookie(d.Conf, sess))
 
 	return c.JSON(userWithToken)
 }
@@ -133,7 +125,7 @@ func (d *Auth) Login(c *fiber.Ctx) error {
 // @Success 200 {string} string	"ok"
 // @Router /api/v1/auth/logout [post]
 func (d *Auth) Logout(c *fiber.Ctx) error {
-	ctx := utils.GetRequestCtx(c)
+	ctx := c.UserContext()
 
 	sessionIDStr := c.Cookies(d.Conf.Service.Auth.Session.Cookie.Name)
 	if sessionIDStr == "" {
@@ -141,12 +133,10 @@ func (d *Auth) Logout(c *fiber.Ctx) error {
 	}
 	sessionID, err := uuid.Parse(sessionIDStr)
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return errs.ErrInvalidReq
 	}
 
 	if err := d.SessionUsecase.DeleteByID(ctx, sessionID); err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return MapUsecaseError(err)
 	}
 
@@ -162,28 +152,25 @@ func (d *Auth) Logout(c *fiber.Ctx) error {
 // @Accept json
 // @Param id path int true "user_id"
 // @Produce json
-// @Success 200 {object} models.User
+// @Success 200 {object} model.User
 // @Router /api/v1/auth/{id} [put]
 func (d *Auth) Update(c *fiber.Ctx) error {
-	ctx := utils.GetRequestCtx(c)
+	ctx := c.UserContext()
 
 	uID, err := uuid.Parse(c.Params(UserIDParam))
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return errs.ErrInvalidReq
 	}
 
-	user := &models.User{}
+	user := &model.User{}
 	user.ID = uID
 
-	if err = utils.ReadRequest(c, user); err != nil {
-		utils.LogResponseError(c, d.Logger, err)
+	if err = util.ReadRequest(c, user); err != nil {
 		return errs.ErrInvalidReq
 	}
 
 	updatedUser, err := d.UserUsecase.Update(ctx, user)
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return MapUsecaseError(err)
 	}
 
@@ -201,16 +188,14 @@ func (d *Auth) Update(c *fiber.Ctx) error {
 // @Failure 500 {object} httpErrors.RestError
 // @Router /api/v1/auth/{id} [delete]
 func (d *Auth) Delete(c *fiber.Ctx) error {
-	ctx := utils.GetRequestCtx(c)
+	ctx := c.UserContext()
 
 	uID, err := uuid.Parse(c.Params(UserIDParam))
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return errs.ErrInvalidReq
 	}
 
 	if err = d.UserUsecase.Delete(ctx, uID); err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return MapUsecaseError(err)
 	}
 
@@ -224,26 +209,23 @@ func (d *Auth) Delete(c *fiber.Ctx) error {
 // @Accept json
 // @Param name query string false "username" Format(username)
 // @Produce json
-// @Success 200 {object} models.UsersList
+// @Success 200 {object} model.UsersList
 // @Failure 500 {object} httpErrors.RestError
 // @Router /auth/search [get]
 func (d *Auth) FindByUsername(c *fiber.Ctx) error {
-	ctx := utils.GetRequestCtx(c)
+	ctx := c.UserContext()
 
 	if c.Query("username") == "" {
-		utils.LogResponseError(c, d.Logger, ErrMissingUsernameQuery)
 		return ErrMissingUsernameQuery
 	}
 
-	paginationQuery, err := utils.GetPaginationFromCtx(c)
+	paginationQuery, err := util.GetPaginationFromCtx(c)
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return errs.ErrInvalidReq
 	}
 
 	response, err := d.UserUsecase.FindByUsername(ctx, c.Query("username"), paginationQuery)
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return MapUsecaseError(err)
 	}
 
@@ -259,21 +241,19 @@ func (d *Auth) FindByUsername(c *fiber.Ctx) error {
 // @Param size query int false "number of elements per page" Format(size)
 // @Param orderBy query int false "filter name" Format(orderBy)
 // @Produce json
-// @Success 200 {object} models.UsersList
+// @Success 200 {object} model.UsersList
 // @Failure 500 {object} httpErrors.RestError
 // @Router /auth/all [get]
 func (d *Auth) GetUsers(c *fiber.Ctx) error {
-	ctx := utils.GetRequestCtx(c)
+	ctx := c.UserContext()
 
-	paginationQuery, err := utils.GetPaginationFromCtx(c)
+	paginationQuery, err := util.GetPaginationFromCtx(c)
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return errs.ErrPaginationQueryMissing
 	}
 
 	usersList, err := d.UserUsecase.GetUsers(ctx, paginationQuery)
 	if err != nil {
-		utils.LogResponseError(c, d.Logger, err)
 		return MapUsecaseError(err)
 	}
 
@@ -286,13 +266,12 @@ func (d *Auth) GetUsers(c *fiber.Ctx) error {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.User
+// @Success 200 {object} model.User
 // @Failure 500 {object} httpErrors.RestError
 // @Router /auth/me [get]
 func (d *Auth) GetMe(c *fiber.Ctx) error {
-	user, ok := c.Locals(UserKey).(*models.User)
+	user, ok := c.Locals(UserKey).(*model.User)
 	if !ok {
-		utils.LogResponseError(c, d.Logger, errs.ErrUnauthorized)
 		return errs.ErrUnauthorized
 	}
 

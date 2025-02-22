@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/daronenko/backend-template/internal/app/config"
-	"github.com/daronenko/backend-template/internal/bininfo"
+	"github.com/daronenko/backend-template/internal/pkg/bininfo"
 	"github.com/daronenko/backend-template/internal/pkg/errs"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
