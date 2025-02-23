@@ -30,7 +30,7 @@ func (r *UserCache) Set(ctx context.Context, user *model.User) error {
 		return errors.Wrap(err, "repo.UserCache.Set.json.Marshal")
 	}
 
-	if err = r.redis.Set(ctx, r.cacheKey(user.ID), userBytes, time.Second*time.Duration(r.conf.Service.Auth.User.Cache.Expire)).Err(); err != nil {
+	if err = r.redis.Set(ctx, r.cacheKey(user.ID), userBytes, time.Second*time.Duration(r.conf.App.Auth.User.Cache.Expire)).Err(); err != nil {
 		return errors.Wrap(err, "repo.UserCache.Set.redis.Set")
 	}
 
@@ -62,5 +62,5 @@ func (r *UserCache) Delete(ctx context.Context, userID uuid.UUID) error {
 }
 
 func (r *UserCache) cacheKey(userID uuid.UUID) string {
-	return fmt.Sprintf("%s:%s", r.conf.Service.Auth.User.Cache.Prefix, userID)
+	return fmt.Sprintf("%s:%s", r.conf.App.Auth.User.Cache.Prefix, userID)
 }

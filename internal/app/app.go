@@ -24,7 +24,7 @@ func Options(ctx ctx.Ctx, additionalOpts ...fx.Option) []fx.Option {
 		os.Exit(1)
 	}
 
-	logger.Setup(&conf.Service.Logger)
+	logger.Setup(&conf.App.Logger)
 
 	baseOpts := []fx.Option{
 		fx.Supply(conf),

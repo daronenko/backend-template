@@ -11,11 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const (
-	prefix        = "api-auth"
-	cacheDuration = 3600
-)
-
 // User usecase
 type User struct {
 	repo  repo.Repo

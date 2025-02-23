@@ -47,24 +47,24 @@ func GetConfigPath(configPath string) string {
 // Configure JWT cookie
 func ConfigureJWTCookie(cfg *config.Config, jwtToken string) *fiber.Cookie {
 	return &fiber.Cookie{
-		Name:     cfg.Service.Auth.Session.Cookie.Name,
+		Name:     cfg.App.Auth.Session.Cookie.Name,
 		Value:    jwtToken,
 		Path:     "/",
-		MaxAge:   cfg.Service.Auth.Session.Cache.Expire,
-		Secure:   cfg.Service.Auth.Session.Cookie.Secure,
-		HTTPOnly: cfg.Service.Auth.Session.Cookie.HTTPOnly,
+		MaxAge:   cfg.App.Auth.Session.Cache.Expire,
+		Secure:   cfg.App.Auth.Session.Cookie.Secure,
+		HTTPOnly: cfg.App.Auth.Session.Cookie.HTTPOnly,
 	}
 }
 
 // Create session cookie
 func CreateSessionCookie(cfg *config.Config, session string) *fiber.Cookie {
 	return &fiber.Cookie{
-		Name:     cfg.Service.Auth.Session.Cookie.Name,
+		Name:     cfg.App.Auth.Session.Cookie.Name,
 		Value:    session,
 		Path:     "/",
-		MaxAge:   cfg.Service.Auth.Session.Cache.Expire,
-		Secure:   cfg.Service.Auth.Session.Cookie.Secure,
-		HTTPOnly: cfg.Service.Auth.Session.Cookie.HTTPOnly,
+		MaxAge:   cfg.App.Auth.Session.Cache.Expire,
+		Secure:   cfg.App.Auth.Session.Cookie.Secure,
+		HTTPOnly: cfg.App.Auth.Session.Cookie.HTTPOnly,
 	}
 }
 

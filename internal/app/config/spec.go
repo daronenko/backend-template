@@ -1,18 +1,30 @@
 package config
 
-import "github.com/daronenko/backend-template/pkg/logger"
+import (
+	"time"
 
-type ServiceSpec struct {
-	Name     string        `mapstructure:"name"`
-	AdminKey string        `mapstructure:"adminKey"`
-	Logger   logger.Config `mapstructure:"logger"`
-	Auth     AuthSpec      `mapstructure:"auth"`
+	"github.com/daronenko/backend-template/pkg/logger"
+)
+
+type AppSpec struct {
+	Address string        `mapstructure:"address"`
+	Admin   AdminSpec     `mapstructure:"admin"`
+	Logger  logger.Config `mapstructure:"logger"`
+	Auth    AuthSpec      `mapstructure:"auth"`
+}
+
+type AdminSpec struct {
+	Key string `mapstructure:"key"`
 }
 
 type AuthSpec struct {
-	JwtSecret string      `mapstructure:"jwtSecret"`
+	JwtSecret string      `mapstructure:"jwt"`
 	User      UserSpec    `mapstructure:"user"`
 	Session   SessionSpec `mapstructure:"session"`
+}
+
+type JwtSpec struct {
+	Secret string `mapstructure:"secret"`
 }
 
 type UserSpec struct {
@@ -35,6 +47,15 @@ type CacheSpec struct {
 	Expire int    `mapstructure:"expire"`
 }
 
+type DevOpsSpec struct {
+	Address string `mapstructure:"address"`
+}
+
+type ServerSpec struct {
+	ShutdownTimeout time.Duration `mapstructure:"shutdownTimeout"`
+	TrustedProxies  []string      `mapstructure:"trustedProxies" split_words:"true"`
+}
+
 type PostgresSpec struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
@@ -43,14 +64,20 @@ type PostgresSpec struct {
 	Database string `mapstructure:"database"`
 	SSLMode  string `mapstructure:"sslMode"`
 	Driver   string `mapstructure:"driver"`
+
+	MaxOpenConns    int           `mapstructure:"maxOpenConns"`
+	ConnMaxLifetime time.Duration `mapstructure:"connMaxLifetime"`
+	MaxIdleConns    int           `mapstructure:"maxIdleConns"`
+	ConnMaxIdleTime time.Duration `mapstructure:"connMaxIdleTime"`
 }
 
 type RedisSpec struct {
-	Host         string `mapstructure:"host"`
-	Port         int    `mapstructure:"port"`
-	Password     string `mapstructure:"password"`
-	Database     int    `mapstructure:"database"`
-	MinIdleConns int    `mapstructure:"minIdleConns"`
-	PoolSize     int    `mapstructure:"poolSize"`
-	PoolTimeout  int    `mapstructure:"poolTimeout"`
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Password string `mapstructure:"password"`
+	Database int    `mapstructure:"database"`
+
+	MinIdleConns int           `mapstructure:"minIdleConns"`
+	PoolSize     int           `mapstructure:"poolSize"`
+	PoolTimeout  time.Duration `mapstructure:"poolTimeout"`
 }

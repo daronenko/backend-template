@@ -34,7 +34,7 @@ func GenerateJWTToken(user *model.User, config *config.Config) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Register the JWT string
-	tokenString, err := token.SignedString([]byte(config.Service.Auth.JwtSecret))
+	tokenString, err := token.SignedString([]byte(config.App.Auth.JwtSecret))
 	if err != nil {
 		return "", err
 	}

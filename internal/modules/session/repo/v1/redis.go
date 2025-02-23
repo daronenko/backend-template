@@ -32,7 +32,7 @@ func (r *Session) Create(ctx context.Context, session *model.Session) (string, e
 		return "", errors.Wrap(err, "repo.Session.Create.json.Marshal")
 	}
 
-	if err = r.redis.Set(ctx, r.cacheKey(session.ID), sessionBytes, time.Second*time.Duration(r.conf.Service.Auth.Session.Cache.Expire)).Err(); err != nil {
+	if err = r.redis.Set(ctx, r.cacheKey(session.ID), sessionBytes, time.Second*time.Duration(r.conf.App.Auth.Session.Cache.Expire)).Err(); err != nil {
 		return "", errors.Wrap(err, "repo.Session.Set.redis.Set")
 	}
 
@@ -64,5 +64,5 @@ func (r *Session) DeleteByID(ctx context.Context, sessionID uuid.UUID) error {
 }
 
 func (r *Session) cacheKey(sessionID uuid.UUID) string {
-	return fmt.Sprintf("%s:%s", r.conf.Service.Auth.Session.Cache.Prefix, sessionID)
+	return fmt.Sprintf("%s:%s", r.conf.App.Auth.Session.Cache.Prefix, sessionID)
 }

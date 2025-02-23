@@ -127,7 +127,7 @@ func (d *Auth) Login(c *fiber.Ctx) error {
 func (d *Auth) Logout(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 
-	sessionIDStr := c.Cookies(d.Conf.Service.Auth.Session.Cookie.Name)
+	sessionIDStr := c.Cookies(d.Conf.App.Auth.Session.Cookie.Name)
 	if sessionIDStr == "" {
 		return errs.ErrUnauthorized
 	}
@@ -140,7 +140,7 @@ func (d *Auth) Logout(c *fiber.Ctx) error {
 		return MapUsecaseError(err)
 	}
 
-	c.ClearCookie(d.Conf.Service.Auth.Session.Cookie.Name)
+	c.ClearCookie(d.Conf.App.Auth.Session.Cookie.Name)
 
 	return c.SendStatus(fiber.StatusOK)
 }

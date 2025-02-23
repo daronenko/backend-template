@@ -1,10 +1,13 @@
-service:
-  name: backend-template
+devMode: true
 
-  adminKey:
+app:
+  address: localhost:8080
+
+  admin:
+    key:
 
   logger:
-    traceLevel: false
+    traceLevel: true
     stdoutOnly: true
     path: deploy/dev/logs/
     filename: dump.log
@@ -14,7 +17,8 @@ service:
     compress: true
   
   auth:
-    jwtSecret: secretkey
+    jwt:
+      secret: secret
 
     user:
       cache:
@@ -31,6 +35,13 @@ service:
         secure: false
         httpOnly: true
 
+devops:
+  address: localhost:8081
+
+server:
+  shutdownTimeout: 60s
+  trustedProxies: ::1,127.0.0.1,10.0.0.0/8
+
 postgres:
   host:
   port:
@@ -40,6 +51,11 @@ postgres:
   sslMode:
   driver: pgx
 
+  maxOpenConns: 60
+  connMaxLifetime: 120s
+  maxIdleConns: 30
+  connMaxIdleTime: 20s
+
 redis:
   host:
   port:
@@ -47,4 +63,4 @@ redis:
   database: 0
   minIdleConns: 200
   poolSize: 12000
-  poolTimeout: 240
+  poolTimeout: 240s

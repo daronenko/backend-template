@@ -16,7 +16,7 @@ func NewRedis(conf *config.Config) (*redis.Client, error) {
 		DB:           conf.Redis.Database,
 		MinIdleConns: conf.Redis.MinIdleConns,
 		PoolSize:     conf.Redis.PoolSize,
-		PoolTimeout:  time.Duration(conf.Redis.PoolTimeout) * time.Second,
+		PoolTimeout:  conf.Redis.PoolTimeout,
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
