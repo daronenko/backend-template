@@ -206,9 +206,7 @@ func tracingProviderOptions(conf *config.Config) []tracesdk.TracerProviderOption
 				options = append(options, tracesdk.WithBatcher(exp))
 				optionsstr = append(optionsstr, "otlpgrpc")
 			case "otlphttp":
-				exp := lo.Must(otlptracehttp.New(
-					context.Background(),
-				))
+				exp := lo.Must(otlptracehttp.New(context.Background()))
 				options = append(options, tracesdk.WithBatcher(exp))
 				optionsstr = append(optionsstr, "otlphttp")
 			case "stdout":
