@@ -16,6 +16,11 @@ app:
     maxBackups: 5
     compress: true
   
+  tracing:
+    enabled: true
+    exporters: otlphttp
+    sampleRate: 1.0
+  
   auth:
     jwt:
       secret: secret

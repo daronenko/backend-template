@@ -1,14 +1,31 @@
+x-logging: &default-logging # anchor(&): 'default-logging' for defines a chunk of configuration
+  driver: loki
+  options:
+    loki-url: 'http://localhost:3100/api/prom/push'
+    loki-pipeline-stages: |
+      - multiline:
+          firstline: '^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2}'
+          max_wait_time: 3s
+      - regex:
+          expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2},d{3}) (?P<message>(?s:.*))$$'
+# Use $$ (double-dollar sign) when your configuration needs a literal dollar sign.
+
 services:
   service:
     image: ${APP_NAME}:latest
     container_name: ${APP_NAME}
     env_file: .env
+    environment:
+      - OTEL_SERVICE_NAME=service
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_RESOURCE_ATTRIBUTES="compose_service=service"
     build:
       dockerfile: deploy/dev/Dockerfile
       context: ../..
       args:
         VERSION: ${VERSION}
         GIT_REVISION: ${GIT_REVISION}
+    logging: *default-logging
     ports:
       - ${APP_PORT}:${APP_PORT}
     restart: on-failure:3
@@ -20,21 +37,30 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      loki:
+        condition: service_started
     profiles: ["default"]
     networks:
       - postgres
       - redis
+      - tracing
+      - metrics
   
   hotreload:
     image: ${APP_NAME}-hotreload:latest
     container_name: ${APP_NAME}-hotreload
     env_file: .env
+    environment:
+      - OTEL_SERVICE_NAME=hotreload
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_RESOURCE_ATTRIBUTES="compose_service=hotreload"
     build:
       dockerfile: deploy/dev/Dockerfile.HotReload
       context: ../..
       args:
         VERSION: ${VERSION}
         GIT_REVISION: ${GIT_REVISION}
+    logging: *default-logging
     ports:
       - ${APP_PORT}:${APP_PORT}
       - 40000:40000
@@ -47,21 +73,30 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      loki:
+        condition: service_started
     profiles: ["hotreload"]
     networks:
       - postgres
       - redis
+      - tracing
+      - metrics
   
   debug:
     image: ${APP_NAME}-debug:latest
     container_name: ${APP_NAME}-debug
     env_file: .env
+    environment:
+      - OTEL_SERVICE_NAME=debug
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_RESOURCE_ATTRIBUTES="compose_service=debug"
     build:
       dockerfile: deploy/dev/Dockerfile.Debug
       context: ../..
       args:
         VERSION: ${VERSION}
         GIT_REVISION: ${GIT_REVISION}
+    logging: *default-logging
     ports:
       - ${APP_PORT}:${APP_PORT}
       - 40000:40000
@@ -74,10 +109,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      loki:
+        condition: service_started
     profiles: ["debug"]
     networks:
       - postgres
       - redis
+      - tracing
+      - metrics
 
   postgres:
     image: ${APP_NAME}-postgres:latest
@@ -102,7 +141,7 @@ services:
           'CMD-SHELL',
           "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}'",
         ]
-      interval: 2s
+      interval: 3s
       timeout: 3s
       retries: 3
     networks:
@@ -125,10 +164,110 @@ services:
       retries: 3
     networks:
       - redis
-      - postgres
+
+  jaeger-collector:
+    image: jaegertracing/jaeger-collector:1.57.0
+    command: 
+      - "--cassandra.keyspace=jaeger_v1_dc1"
+      - "--cassandra.servers=cassandra"
+      # - "--sampling.initial-sampling-probability=.5"
+      # - "--sampling.target-samples-per-second=.01"
+      - "--collector.otlp.enabled=true"
+    environment: 
+      - SAMPLING_CONFIG_TYPE=adaptive
+    ports:
+      - 4317 # accept OpenTelemetry Protocol (OTLP) over gRPC
+      - 4318 # accept OpenTelemetry Protocol (OTLP) over HTTP
+    restart: on-failure
+    depends_on:
+      - cassandra-schema  
+    networks:
+      - tracing
+
+  # Cassandra instance container
+  cassandra:
+    image: cassandra:4.1.4
+    networks:
+      - tracing
+
+  # initialize Cassandra
+  cassandra-schema:
+    image: jaegertracing/jaeger-cassandra-schema:1.57.0
+    depends_on:
+      - cassandra
+    networks:
+      - tracing
+
+  jaeger-query:
+    image: jaegertracing/jaeger-query:1.57.0
+    command:
+      - "--cassandra.keyspace=jaeger_v1_dc1"
+      - "--cassandra.servers=cassandra"
+    ports:
+      - 16686:16686
+      - 16687:16687
+    restart: on-failure
+    depends_on:
+      - cassandra-schema
+    networks:
+      - tracing
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.100.0
+    command:
+      - --config=/conf/config.yaml
+    volumes:
+      - ./otel/config.yaml:/conf/config.yaml
+    ports:
+      - 4317 # OTLP gRPC receiver
+      - 4318 # OTLP http receiver
+    restart: on-failure
+    depends_on:
+      - jaeger-collector
+    networks:
+      - tracing
+  
+  grafana:
+    image: grafana/grafana:10.4.2
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/etc/grafana/dashboards
+    networks:
+      - tracing
+      - metrics
+  
+  loki:
+    image: grafana/loki:3.0.0
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - 3100:3100
+    networks:
+      - tracing
+  
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus:/workspace
+    command:
+      - --config.file=/workspace/prometheus.yml
+      - --enable-feature=exemplar-storage
+    depends_on:
+      - loki
+    logging: *default-logging
+    networks:
+      - metrics
 
 networks:
     postgres:
       driver: bridge
     redis:
+      driver: bridge
+    tracing:
+      driver: bridge
+    metrics:
       driver: bridge

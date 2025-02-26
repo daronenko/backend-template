@@ -34,6 +34,11 @@ func Options(ctx ctx.Ctx, additionalOpts ...fx.Option) []fx.Option {
 		infra.Module(),
 		server.Module(),
 
+		// Global Singleton Inits: Keep those before controllers to ensure they are initialized
+		// before controllers are registered as controllers are also fx#Invoke functions which
+		// are called in the order of their registration.
+		// fx.Invoke(infra.InitSentry),
+
 		meta.Module(),
 		auth.Module(),
 		session.Module(),
