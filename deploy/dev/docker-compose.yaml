@@ -167,6 +167,7 @@ services:
 
   jaeger-collector:
     image: jaegertracing/jaeger-collector:1.57.0
+    container_name: ${APP_NAME}-jaeger-collector
     command: 
       - "--cassandra.keyspace=jaeger_v1_dc1"
       - "--cassandra.servers=cassandra"
@@ -187,12 +188,14 @@ services:
   # Cassandra instance container
   cassandra:
     image: cassandra:4.1.4
+    container_name: ${APP_NAME}-cassandra
     networks:
       - tracing
 
   # initialize Cassandra
   cassandra-schema:
     image: jaegertracing/jaeger-cassandra-schema:1.57.0
+    container_name: ${APP_NAME}-cassandra-schema
     depends_on:
       - cassandra
     networks:
@@ -200,6 +203,7 @@ services:
 
   jaeger-query:
     image: jaegertracing/jaeger-query:1.57.0
+    container_name: ${APP_NAME}-jaeger-query
     command:
       - "--cassandra.keyspace=jaeger_v1_dc1"
       - "--cassandra.servers=cassandra"
@@ -212,23 +216,9 @@ services:
     networks:
       - tracing
 
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.100.0
-    command:
-      - --config=/conf/config.yaml
-    volumes:
-      - ./otel/config.yaml:/conf/config.yaml
-    ports:
-      - 4317 # OTLP gRPC receiver
-      - 4318 # OTLP http receiver
-    restart: on-failure
-    depends_on:
-      - jaeger-collector
-    networks:
-      - tracing
-  
   grafana:
     image: grafana/grafana:10.4.2
+    container_name: ${APP_NAME}-grafana
     ports:
       - 3000:3000
     volumes:
@@ -241,6 +231,7 @@ services:
   
   loki:
     image: grafana/loki:3.0.0
+    container_name: ${APP_NAME}-loki
     command: -config.file=/etc/loki/local-config.yaml
     ports:
       - 3100:3100
@@ -249,6 +240,7 @@ services:
   
   prometheus:
     image: prom/prometheus:v2.51.2
+    container_name: ${APP_NAME}-prometheus
     ports:
       - 9090:9090
     volumes:

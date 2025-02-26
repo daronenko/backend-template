@@ -19,28 +19,6 @@ func main() {
 	app.New(ctx.Declare(ctx.EnvServer), fx.Invoke(run)).Run()
 }
 
-// func run(serviceApp *fiber.App, devOpsApp httpserver.DevOpsApp, cfg *config.Config, lc fx.Lifecycle) {
-// 	lc.Append(fx.Hook{
-// 		OnStart: func(ctx context.Context) error {
-// 			serviceLn, err := net.Listen("tcp", "0.0.0.0:8080")
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			go func() {
-// 				if err := serviceApp.Listener(serviceLn); err != nil {
-// 					log.Error().Err(err).Msg("server terminated unexpectedly")
-// 				}
-// 			}()
-
-// 			return nil
-// 		},
-// 		OnStop: func(ctx context.Context) error {
-// 			return nil
-// 		},
-// 	})
-// }
-
 func run(serviceApp *fiber.App, devOpsApp httpserver.DevOpsApp, conf *config.Config, lc fx.Lifecycle) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
@@ -82,13 +60,6 @@ func run(serviceApp *fiber.App, devOpsApp httpserver.DevOpsApp, conf *config.Con
 			return async.WaitAll(
 				async.Errable(serviceApp.Shutdown),
 				async.Errable(devOpsApp.Shutdown),
-				// async.Errable(func() error {
-				// 	flushed := sentry.Flush(time.Second * 30)
-				// 	if !flushed {
-				// 		return errors.New("sentry flush timeout, some events may be lost")
-				// 	}
-				// 	return nil
-				// }),
 			)
 		},
 	})

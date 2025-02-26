@@ -7,14 +7,18 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/daronenko/backend-template/internal/app/config"
 	"github.com/daronenko/backend-template/internal/pkg/bininfo"
 	"github.com/daronenko/backend-template/internal/pkg/errs"
+	"github.com/daronenko/backend-template/internal/pkg/metrics"
 	"github.com/daronenko/backend-template/pkg/middleware"
 	"github.com/gofiber/contrib/otelfiber/v2"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
@@ -29,6 +33,8 @@ import (
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
+
+var prometheusRegisterOnce sync.Once
 
 type DevOpsApp struct {
 	*fiber.App
@@ -66,21 +72,18 @@ func CreateServiceApp(conf *config.Config) *fiber.App {
 
 	app.Use(favicon.New())
 
-	// app.Use(fibersentry.New(fibersentry.Config{
-	// 	Repanic: true,
-	// 	Timeout: time.Second * 5,
-	// }))
-
-	// app.Use(cors.New(cors.Config{
-	// 	AllowOrigins: "*",
-	// 	AllowOriginsFunc: func(origin string) bool {
-	// 		return true
-	// 	},
-	// 	AllowMethods:     "GET, POST, DELETE, OPTIONS",
-	// 	AllowHeaders:     "Content-Type, Authorization, X-Requested-With, X-BackendTemplate-Variant, sentry-trace",
-	// 	ExposeHeaders:    "Content-Type, X-BackendTemplate-Set-UserID, X-BackendTemplate-Upgrade, X-BackendTemplate-Compatible, X-BackendTemplate-Request-ID",
-	// 	AllowCredentials: true,
-	// }))
+	if !conf.DevMode {
+		app.Use(cors.New(cors.Config{
+			AllowOrigins: "*",
+			AllowOriginsFunc: func(origin string) bool {
+				return true
+			},
+			AllowMethods:     "GET, POST, DELETE, OPTIONS",
+			AllowHeaders:     "Content-Type, Authorization, X-Requested-With, X-BackendTemplate-Variant",
+			ExposeHeaders:    "Content-Type, X-BackendTemplate-Set-UserID, X-BackendTemplate-Upgrade, X-BackendTemplate-Compatible, X-BackendTemplate-Request-ID",
+			AllowCredentials: true,
+		}))
+	}
 
 	// requestid is used by report service to identify requests and generate taskId there afterwards
 	// the logger middleware now injects RequestID into the context
@@ -138,19 +141,17 @@ func CreateServiceApp(conf *config.Config) *fiber.App {
 
 	app.Use(otelfiber.Middleware(otelfiber.WithServerName("backend")))
 
-	// prometheusRegisterOnce.Do(func() {
-	// 	fiberprometheus.New(observability.ServiceName).RegisterAt(app, "/metrics")
-	// })
+	prometheusRegisterOnce.Do(func() {
+		p := fiberprometheus.NewWithDefaultRegistry(metrics.Namespace)
+		p.RegisterAt(app, "/metrics")
+		app.Use(p.Middleware)
+	})
 
 	if conf.DevMode {
 		log.Info().
 			Str("evt.name", "infra.dev_mode.enabled").
 			Msg("running in dev mode")
 	}
-
-	// if !conf.DevMode {
-	// 	app.Use(middleware.EnrichSentry())
-	// }
 
 	return app
 }

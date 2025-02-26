@@ -1,7 +1,7 @@
 devMode: true
 
 app:
-  address: localhost:8080
+  address: 0.0.0.0:8080
 
   admin:
     key:
@@ -41,7 +41,7 @@ app:
         httpOnly: true
 
 devops:
-  address: localhost:8081
+  address: 0.0.0.0:8081
 
 server:
   shutdownTimeout: 60s
