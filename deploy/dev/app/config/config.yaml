@@ -9,7 +9,7 @@ app:
   logger:
     traceLevel: true
     stdoutOnly: true
-    path: deploy/dev/logs/
+    path: /var/log/template/
     filename: dump.log
     maxSize: 100
     maxAge: 90

@@ -1,5 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE "user"
 (
     id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -17,4 +19,6 @@ CREATE TABLE "user"
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE IF EXISTS "user" CASCADE;
+
+DROP EXTENSION IF EXISTS "uuid-ossp";
 -- +goose StatementEnd

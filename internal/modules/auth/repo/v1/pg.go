@@ -2,13 +2,13 @@ package repo
 
 import (
 	"context"
+	"database/sql"
 
 	"emperror.dev/errors"
 	"github.com/daronenko/backend-template/internal/model/v1"
 	"github.com/daronenko/backend-template/internal/util"
 	"github.com/daronenko/backend-template/pkg/pgerrs"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -55,7 +55,7 @@ func (r *User) Update(ctx context.Context, user *model.User) (*model.User, error
 	).StructScan(updatedUser)
 	if err != nil {
 		switch {
-		case errors.Is(err, pgx.ErrNoRows):
+		case errors.Is(err, sql.ErrNoRows):
 			return nil, ErrUserNotFound
 		case pgerrs.Is(err, pgerrs.UniqueViolation):
 			return nil, ErrUserExists
@@ -92,7 +92,7 @@ func (r *User) GetByID(ctx context.Context, userID uuid.UUID) (*model.User, erro
 
 	err := r.db.GetContext(ctx, foundUser, getUserQuery, userID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrUserNotFound
 		}
 		return nil, errors.Wrap(err, "repo.User.GetByID.GetContext")
@@ -107,7 +107,7 @@ func (u *User) GetByEmail(ctx context.Context, user *model.User) (*model.User, e
 
 	err := u.db.GetContext(ctx, foundUser, getUserByEmailQuery, user.Email)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrUserNotFound
 		}
 		return nil, errors.Wrap(err, "repo.User.GetByEmail.GetContext")

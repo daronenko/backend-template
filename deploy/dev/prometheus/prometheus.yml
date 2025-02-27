@@ -1,54 +1,42 @@
 global:
-  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
-  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
-  # scrape_timeout is set to the global default (10s).
+  scrape_interval:     20s
+  evaluation_interval: 20s
 
-# Alertmanager configuration
-alerting:
-  alertmanagers:
-    - scheme: http
-      static_configs:
-        - targets: ['alertmanager:9093']
+  external_labels:
+      monitor: 'Host Server'
 
-# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
 rule_files:
   - 'alerts/*.yml'
 
-# A scrape configuration containing exactly one endpoint to scrape:
-# Here it's Prometheus itself.
 scrape_configs:
+  - job_name: 'service'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['service:8080']
+
   - job_name: 'nodeexporter'
     scrape_interval: 5s
     static_configs:
       - targets: ['nodeexporter:9100']
-  
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  - job_name: "prometheus"
 
-    # metrics_path defaults to '/metrics'
-    # scheme defaults to 'http'.
-
-    static_configs:
-      - targets: ["localhost:9090"]
-  
-  # - job_name: aggregated-trace-metrics
-  #   static_configs:
-  #   - targets: ['otel-collector:8889']
-
-  - job_name: 'service'
-
-    # Override the global default and scrape targets from this job every 5 seconds.
-    scrape_interval: 5s
-
-    static_configs:
-      - targets: ['service:8080']
-  
-  - job_name: 'loki'
-    scrape_interval: 1m
-    static_configs:
-      - targets: ['loki:3100']
-  
   - job_name: 'cadvisor'
     scrape_interval: 15s
     static_configs:
       - targets: ['cadvisor:8080']
+
+  - job_name: 'prometheus'
+    scrape_interval: 1m
+    static_configs:
+      - targets: ['prometheus:9090']
+
+  - job_name: 'loki'
+    scrape_interval: 1m
+    static_configs:
+      - targets: ['loki:3100']
+
+alerting:
+  alertmanagers:
+  - scheme: http
+    static_configs:
+    - targets: 
+      - 'alertmanager:9093'

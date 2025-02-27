@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/daronenko/backend-template/internal/modules/auth/repo/v1"
 )
@@ -14,6 +15,7 @@ var (
 )
 
 func MapRepoError(err error) error {
+	fmt.Printf("\n\n\n%s\n\n\n", err)
 	switch {
 	case errors.Is(err, repo.ErrUserNotFound):
 		return ErrUserNotFound

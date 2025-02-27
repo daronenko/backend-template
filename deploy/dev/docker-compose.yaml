@@ -1,4 +1,4 @@
-x-logging: &default-logging # anchor(&): 'default-logging' for defines a chunk of configuration
+x-logging: &loki-logging
   driver: loki
   options:
     loki-url: 'http://localhost:3100/api/prom/push'
@@ -8,292 +8,392 @@ x-logging: &default-logging # anchor(&): 'default-logging' for defines a chunk o
           max_wait_time: 3s
       - regex:
           expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2},d{3}) (?P<message>(?s:.*))$$'
-# Use $$ (double-dollar sign) when your configuration needs a literal dollar sign.
+
+x-otel: &otel-environment
+  - OTEL_SERVICE_NAME=${APP_NAME}
+  - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+  - OTEL_RESOURCE_ATTRIBUTES="compose_service=${APP_NAME}"
+
+
+networks:
+    postgres:
+      driver: bridge
+    
+    redis:
+      driver: bridge
+    
+    tracing:
+      driver: bridge
+
+    tracing-internal:
+      driver: bridge
+    
+    exporters:
+      driver: bridge
+    
+    logging:
+      driver: bridge
+    
+    prometheus:
+      driver: bridge
+    
+    alerting:
+      driver: bridge
+
+volumes:
+    cassandra-data: {}
+    alertmanager-data: {}
 
 services:
+  
+  ################################################################################
+  # App
+  ################################################################################
+
   service:
     image: ${APP_NAME}:latest
     container_name: ${APP_NAME}
     env_file: .env
-    environment:
-      - OTEL_SERVICE_NAME=service
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
-      - OTEL_RESOURCE_ATTRIBUTES="compose_service=service"
+    environment: *otel-environment
+    logging: *loki-logging
+    restart: on-failure:3
     build:
       dockerfile: deploy/dev/Dockerfile
       context: ../..
       args:
         VERSION: ${VERSION}
         GIT_REVISION: ${GIT_REVISION}
-    logging: *default-logging
-    ports:
-      - ${APP_PORT}:${APP_PORT}
-    restart: on-failure:3
-    volumes:
-      - ./config/config.yaml:/etc/app/config.yaml
-      - ./logs:/var/log
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      loki:
-        condition: service_started
-    profiles: ["default"]
+    ports:
+      - 8080:8080
+    volumes:
+      - ./app/config/config.yaml:/etc/app/config.yaml
+      - ./app/logs:/var/log/app
+    profiles:
+      - app
     networks:
       - postgres
       - redis
       - tracing
-      - metrics
+      - prometheus
+      - logging
   
   hotreload:
     image: ${APP_NAME}-hotreload:latest
     container_name: ${APP_NAME}-hotreload
     env_file: .env
-    environment:
-      - OTEL_SERVICE_NAME=hotreload
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
-      - OTEL_RESOURCE_ATTRIBUTES="compose_service=hotreload"
+    environment: *otel-environment
+    logging: *loki-logging
+    restart: on-failure:3
     build:
       dockerfile: deploy/dev/Dockerfile.HotReload
       context: ../..
       args:
         VERSION: ${VERSION}
         GIT_REVISION: ${GIT_REVISION}
-    logging: *default-logging
-    ports:
-      - ${APP_PORT}:${APP_PORT}
-      - 40000:40000
-    restart: on-failure:3
-    volumes:
-      - ../..:/app
-      - ./config/config.yaml:/etc/app/config.yaml
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      loki:
-        condition: service_started
-    profiles: ["hotreload"]
+    ports:
+      - 8080:8080
+      - 40000:40000
+    volumes:
+      - ../..:/app
+      - ./app/config/config.yaml:/etc/app/config.yaml
+      - ./app/logs:/var/log/app
+    profiles:
+      - app-hotreload
     networks:
       - postgres
       - redis
       - tracing
-      - metrics
+      - prometheus
+      - logging
   
   debug:
     image: ${APP_NAME}-debug:latest
     container_name: ${APP_NAME}-debug
     env_file: .env
-    environment:
-      - OTEL_SERVICE_NAME=debug
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
-      - OTEL_RESOURCE_ATTRIBUTES="compose_service=debug"
+    environment: *otel-environment
+    logging: *loki-logging
+    restart: on-failure:3
     build:
       dockerfile: deploy/dev/Dockerfile.Debug
       context: ../..
       args:
         VERSION: ${VERSION}
         GIT_REVISION: ${GIT_REVISION}
-    logging: *default-logging
-    ports:
-      - ${APP_PORT}:${APP_PORT}
-      - 40000:40000
-    restart: on-failure:3
-    volumes:
-      - ./config/config.yaml:/etc/app/config.yaml
-      - ./logs:/var/log
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      loki:
-        condition: service_started
-    profiles: ["debug"]
+    ports:
+      - 8080:8080
+      - 40000:40000
+    volumes:
+      - ./app/config/config.yaml:/etc/app/config.yaml
+      - ./app/logs:/var/log/app
+    profiles:
+      - app-debug
     networks:
       - postgres
       - redis
       - tracing
-      - metrics
+      - prometheus
+      - logging
+
+  ################################################################################
+  # App Dependencies
+  ################################################################################
 
   postgres:
     image: ${APP_NAME}-postgres:latest
     container_name: ${APP_NAME}-postgres
-    build:
-      dockerfile: postgres/Dockerfile
-      context: .
     env_file: .env
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
-    ports:
-      - ${POSTGRES_PORT}:5432
+    logging: *loki-logging
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     restart: on-failure:3
+    build:
+      dockerfile: postgres/Dockerfile
+      context: .
+    healthcheck:
+      test:
+        [ 'CMD-SHELL', "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}'" ]
+      interval: 3s
+      timeout: 3s
+      retries: 3
+    ports:
+      - 5432:5432
     volumes:
       - ./postgres/.pgdata:/var/lib/postgresql/data
       - ./postgres/config/postgresql.conf:/etc/postgresql/postgresql.conf
-      - ./postgres/init:/docker-entrypoint-initdb.d
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf
-    healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}'",
-        ]
-      interval: 3s
-      timeout: 3s
-      retries: 3
+      # - ./postgres/init/init.sql:/docker-entrypoint-initdb.d/init.sql
+    profiles:
+      - app
+      - app-hotreload
+      - app-debug
     networks:
       - postgres
+      - logging
   
   redis:
-    image: redis:7.4-alpine
+    image: redis:7.4.2
     container_name: ${APP_NAME}-redis
-    restart: on-failure:3
-    ports:
-      - 6379:6379
+    logging: *loki-logging
     command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
-    volumes: 
-      - ./redis/.rdata:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    restart: on-failure:3
     healthcheck:
-      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--raw", "incr", "ping" ]
+      test: [ 'CMD', 'redis-cli', '-a', "${REDIS_PASSWORD}", '--raw', 'incr', 'ping' ]
       interval: 3s
       timeout: 3s
       retries: 3
+    ports:
+      - 6379:6379
+    volumes:
+      - ./redis/.rdata:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    profiles:
+      - app
+      - app-hotreload
+      - app-debug
     networks:
       - redis
+      - logging
+  
+  ################################################################################
+  # Tracing
+  ################################################################################
 
   jaeger-collector:
     image: jaegertracing/jaeger-collector:1.57.0
     container_name: ${APP_NAME}-jaeger-collector
-    command: 
-      - "--cassandra.keyspace=jaeger_v1_dc1"
-      - "--cassandra.servers=cassandra"
-      # - "--sampling.initial-sampling-probability=.5"
-      # - "--sampling.target-samples-per-second=.01"
-      - "--collector.otlp.enabled=true"
     environment: 
       - SAMPLING_CONFIG_TYPE=adaptive
-    ports:
-      - 4317 # accept OpenTelemetry Protocol (OTLP) over gRPC
-      - 4318 # accept OpenTelemetry Protocol (OTLP) over HTTP
-    restart: on-failure
+    command:
+      - --cassandra.keyspace=jaeger_v1_dc1
+      - --cassandra.servers=cassandra
+      - --sampling.initial-sampling-probability=.5
+      - --sampling.target-samples-per-second=.01
+      - --collector.otlp.enabled=true
+    restart: on-failure:3
     depends_on:
-      - cassandra-schema  
+      cassandra-schema:
+        condition: service_completed_successfully
+    expose:
+      - 4317  # oltp over grpc
+      - 4318  # oltp over http
+    profiles:
+      - monitoring
     networks:
       - tracing
+      - tracing-internal
 
-  # Cassandra instance container
   cassandra:
     image: cassandra:4.1.4
     container_name: ${APP_NAME}-cassandra
+    restart: on-failure:3
+    healthcheck:
+      test: [ 'CMD-SHELL', 'nodetool status' ]
+      interval: 2m
+      start_period: 2m
+      timeout: 10s
+      retries: 3
+    expose:
+      - 7000
+    volumes:
+      - cassandra-data:/var/lib/cassandra:rw
+    profiles:
+      - monitoring
     networks:
-      - tracing
+      - tracing-internal
 
-  # initialize Cassandra
   cassandra-schema:
     image: jaegertracing/jaeger-cassandra-schema:1.57.0
     container_name: ${APP_NAME}-cassandra-schema
+    restart: on-failure:3
     depends_on:
-      - cassandra
+      cassandra:
+        condition: service_healthy
+    profiles:
+      - monitoring
     networks:
-      - tracing
+      - tracing-internal
 
   jaeger-query:
     image: jaegertracing/jaeger-query:1.57.0
     container_name: ${APP_NAME}-jaeger-query
     command:
-      - "--cassandra.keyspace=jaeger_v1_dc1"
-      - "--cassandra.servers=cassandra"
-    ports:
-      - 16686:16686
-      - 16687:16687
-    restart: on-failure
+      - --cassandra.keyspace=jaeger_v1_dc1
+      - --cassandra.servers=cassandra
+    restart: on-failure:3
     depends_on:
-      - cassandra-schema
+      cassandra-schema:
+        condition: service_completed_successfully
+    expose:
+      - 16686
+      - 16687
+    profiles:
+      - monitoring
     networks:
       - tracing
+      - tracing-internal
+  
+  ################################################################################
+  # Monitoring: logging, metrics, alerting
+  ################################################################################
 
   grafana:
     image: grafana/grafana:10.4.2
     container_name: ${APP_NAME}-grafana
+    env_file: .env
+    restart: on-failure:3
+    depends_on:
+      prometheus:
+        condition: service_started
+      jaeger-query:
+        condition: service_started
+      loki:
+        condition: service_started
     ports:
       - 3000:3000
     volumes:
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/dashboards:/etc/grafana/dashboards
+    profiles:
+      - monitoring
     networks:
+      - prometheus
       - tracing
-      - metrics
-  
-  loki:
-    image: grafana/loki:3.0.0
-    container_name: ${APP_NAME}-loki
-    command: -config.file=/etc/loki/local-config.yaml
-    ports:
-      - 3100:3100
-    networks:
-      - tracing
+      - logging
   
   prometheus:
     image: prom/prometheus:v2.51.2
     container_name: ${APP_NAME}-prometheus
-    ports:
-      - 9090:9090
-    volumes:
-      - ./prometheus:/workspace
     command:
       - --config.file=/workspace/prometheus.yml
       - --enable-feature=exemplar-storage
-    depends_on:
-      - loki
-    logging: *default-logging
+    restart: on-failure:3
+    volumes:
+      - ./prometheus:/workspace
+    ports:
+      - 9090:9090
+    profiles:
+      - monitoring
     networks:
-      - metrics
+      - prometheus
+      - exporters
+      - alerting
+      - logging
   
   alertmanager:
     image: prom/alertmanager:latest
     container_name: ${APP_NAME}-alertmanager
     env_file: .env
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.external-url=${ALERTMANAGER_EXTERNAL_URL}
+    restart: on-failure:3
+    depends_on:
+      prometheus:
+        condition: service_started
     volumes:
       - alertmanager-data:/alertmanager
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
       - ./alertmanager/telegram.tmpl:/etc/alertmanager/telegram.tmpl
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
-      - '--web.external-url=${ALERTMANAGER_EXTERNAL_URL:-}'
-    restart: on-failure
-    ports:
-      - 9093:9093
+    expose:
+      - 9093
+    profiles:
+      - monitoring
     networks:
-      - metrics
-  
+      - alerting
+
+  ################################################################################
+  # Metric Exporters
+  ################################################################################
+
   nodeexporter:
     image: prom/node-exporter:latest
     container_name: ${APP_NAME}-nodeexporter
     command:
-      - "--path.procfs=/host/proc"
-      - "--path.rootfs=/rootfs"
-      - "--path.sysfs=/host/sys"
-      - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
-      - "--no-collector.rapl"
-    restart: on-failure
-    expose:
-      - 9100
+      - --path.procfs=/host/proc
+      - --path.rootfs=/rootfs
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)
+      - --no-collector.rapl
+    restart: on-failure:3
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
+    expose:
+      - 9100
+    profiles:
+      - monitoring
     networks:
-      - metrics
+      - exporters
   
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: ${APP_NAME}-cadvisor
+    command:
+      - -housekeeping_interval=10s
+      - -docker_only=true
+    restart: on-failure:3
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    security_opt:
+      - no-new-privileges:true
     volumes:
       - /:/rootfs:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -302,28 +402,24 @@ services:
       - /var/lib/docker:/var/lib/docker:ro
       - /sys/fs/cgroup:/cgroup:ro
       - /dev/disk/:/dev/disk:ro
-    command:
-      - '-housekeeping_interval=10s'
-      - '-docker_only=true'
-    restart: on-failure
-    devices:
-      - /dev/kmsg:/dev/kmsg
-    security_opt:
-      - no-new-privileges:true
-    ports:
-      - 9080:8080
+    expose:
+      - 8080
+    profiles:
+      - monitoring
     networks:
-      - metrics
+      - exporters
 
-networks:
-    postgres:
-      driver: bridge
-    redis:
-      driver: bridge
-    tracing:
-      driver: bridge
-    metrics:
-      driver: bridge
+  ################################################################################
+  # Logging
+  ################################################################################
 
-volumes:
-    alertmanager-data: {}
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: ${APP_NAME}-loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - 3100:3100
+    profiles:
+      - monitoring
+    networks:
+      - logging
