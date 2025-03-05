@@ -8,10 +8,10 @@ import (
 	"github.com/daronenko/backend-template/internal/app/config"
 	"github.com/daronenko/backend-template/internal/app/ctx"
 	"github.com/daronenko/backend-template/internal/infra"
-	"github.com/daronenko/backend-template/internal/modules/auth"
-	"github.com/daronenko/backend-template/internal/modules/meta"
-	"github.com/daronenko/backend-template/internal/modules/session"
 	"github.com/daronenko/backend-template/internal/server"
+	"github.com/daronenko/backend-template/internal/services/auth"
+	"github.com/daronenko/backend-template/internal/services/meta"
+	"github.com/daronenko/backend-template/internal/services/session"
 	"github.com/daronenko/backend-template/pkg/logger"
 
 	"go.uber.org/fx"
