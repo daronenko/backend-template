@@ -6,5 +6,6 @@ func Module() fx.Option {
 	return fx.Module("infra", fx.Provide(
 		NewPostgres,
 		NewRedis,
+		NewTracer,
 	))
 }

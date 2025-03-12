@@ -1,6 +1,6 @@
 package config
 
-import "github.com/daronenko/backend-template/internal/app/ctx"
+import "github.com/daronenko/backend-template/internal/app/appctx"
 
 type Config struct {
 	DevMode  bool         `mapstructure:"devMode"`
@@ -10,5 +10,5 @@ type Config struct {
 	Postgres PostgresSpec `mapstructure:"postgres"`
 	Redis    RedisSpec    `mapstructure:"redis"`
 
-	AppContext ctx.Ctx
+	AppContext appctx.Ctx
 }

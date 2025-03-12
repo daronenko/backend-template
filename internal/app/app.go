@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/daronenko/backend-template/internal/app/appctx"
 	"github.com/daronenko/backend-template/internal/app/config"
-	"github.com/daronenko/backend-template/internal/app/ctx"
 	"github.com/daronenko/backend-template/internal/infra"
 	"github.com/daronenko/backend-template/internal/server"
 	"github.com/daronenko/backend-template/internal/services/auth"
@@ -17,7 +17,7 @@ import (
 	"go.uber.org/fx"
 )
 
-func Options(ctx ctx.Ctx, additionalOpts ...fx.Option) []fx.Option {
+func Options(ctx appctx.Ctx, additionalOpts ...fx.Option) []fx.Option {
 	conf, err := config.New(ctx)
 	if err != nil {
 		log.Printf("error: failed to parse config: %v\n", err)
@@ -44,6 +44,6 @@ func Options(ctx ctx.Ctx, additionalOpts ...fx.Option) []fx.Option {
 	return append(baseOpts, additionalOpts...)
 }
 
-func New(ctx ctx.Ctx, additionalOpts ...fx.Option) *fx.App {
+func New(ctx appctx.Ctx, additionalOpts ...fx.Option) *fx.App {
 	return fx.New(Options(ctx, additionalOpts...)...)
 }

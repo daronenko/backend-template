@@ -5,8 +5,8 @@ import (
 	"net"
 
 	"github.com/daronenko/backend-template/internal/app"
+	"github.com/daronenko/backend-template/internal/app/appctx"
 	"github.com/daronenko/backend-template/internal/app/config"
-	"github.com/daronenko/backend-template/internal/app/ctx"
 	"github.com/daronenko/backend-template/internal/server/httpserver"
 	"github.com/daronenko/backend-template/pkg/async"
 
@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	app.New(ctx.Declare(ctx.EnvServer), fx.Invoke(run)).Run()
+	app.New(appctx.Declare(appctx.EnvServer), fx.Invoke(run)).Run()
 }
 
 func run(serviceApp *fiber.App, devOpsApp httpserver.DevOpsApp, conf *config.Config, lc fx.Lifecycle) {

@@ -9,11 +9,14 @@ import (
 	"github.com/daronenko/backend-template/internal/services/meta/usecase/v1"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cache"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/fx"
 )
 
 type Meta struct {
 	fx.In
+
+	Tracer trace.Tracer
 
 	HealthUsecase usecase.HealthUsecase
 }
@@ -29,6 +32,9 @@ func InitMeta(d Meta, meta *svr.Meta) {
 }
 
 func (d *Meta) BinInfo(c *fiber.Ctx) error {
+	_, span := d.Tracer.Start(c.UserContext(), "delivery.Meta.BinInfo")
+	defer span.End()
+
 	return c.JSON(fiber.Map{
 		"version":      bininfo.Version,
 		"git_revision": bininfo.GitRevision,

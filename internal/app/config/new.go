@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/daronenko/backend-template/internal/app/ctx"
+	"github.com/daronenko/backend-template/internal/app/appctx"
 	"github.com/spf13/viper"
 )
 
-func New(ctx ctx.Ctx) (*Config, error) {
+func New(ctx appctx.Ctx) (*Config, error) {
 	flag.Parse()
 
 	viper.SetConfigFile(configPath)

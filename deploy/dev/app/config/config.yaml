@@ -17,7 +17,7 @@ app:
     compress: true
   
   tracing:
-    enabled: true
+    enabled: false
     exporters: otlphttp
     sampleRate: 1.0
   
